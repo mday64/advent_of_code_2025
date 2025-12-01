@@ -2,16 +2,12 @@ pub fn part1(input: &str) -> u32 {
     let mut result = 0;
     let mut position: i32 = 50;
     for line in input.lines() {
-        let amount: i32 = line[1..].parse().unwrap();
+        let mut amount: i32 = line[1..].parse().unwrap();
+        if &line[..1] == "L" {
+            amount = -amount;
+        }
 
-        if &line[..1] == "R" {
-            position = (position + amount) % 100;
-        } else if &line[..1] == "L" {
-            position = (position - amount) % 100;
-        }
-        if position < 0 {
-            position += 100;
-        }
+        position = (position + amount).rem_euclid(100);
 
         assert!(position >= 0);
 
