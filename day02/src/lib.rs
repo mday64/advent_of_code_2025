@@ -1,27 +1,67 @@
 use std::ops::RangeInclusive;
 
+//
+// For the given ranges, find all numbers that consist of a sequence of
+// digits repeated twice.  Return their sum.
+//
 pub fn part1(input: &str) -> u64 {
     parse_input(input)
         .into_iter()
         .flatten()
         .filter(|num| {
-            (num % 11 == 0 && (1..=9).contains(&(num / 11))) ||
-            (num % 101 == 0 && (10..=99).contains(&(num / 101))) ||
-            (num % 1001 == 0 && (100..=999).contains(&(num / 1001))) ||
-            (num % 10001 == 0 && (1000..=9999).contains(&(num / 10001))) ||
-            (num % 100001 == 0 && (10000..=99999).contains(&(num / 100001))) ||
-            (num % 1000001 == 0 && (100000..=999999).contains(&(num / 1000001))) ||
-            (num % 10000001 == 0 && (1000000..=9999999).contains(&(num / 10000001))) ||
-            (num % 100000001 == 0 && (10000000..=99999999).contains(&(num / 100000001))) ||
-            (num % 1000000001 == 0 && (100000000..=999999999).contains(&(num / 1000000001))) ||
-            (num % 10000000001 == 0 && (1000000000..=9999999999).contains(&(num / 10000000001)))
+            match num {
+                10 ..= 99 =>                    // 2 digits; pattern is 1 digit
+                    num % 11 == 0,
+                1000 ..= 9999 =>                // 4 digits; pattern is 2 digits
+                    num % 101 == 0,
+                100000 ..= 999999 =>            // 6 digits; pattern is 3 digits
+                    num % 1001 == 0,
+                10000000 ..= 99999999 =>        // 8 digits; pattern is 4 digits
+                    num % 10001 == 0,
+                1000000000 ..= 9999999999 =>    // 10 digits; pattern is 5 digits
+                    num % 100001 == 0,
+                _ => false
+            }
         })
         // .inspect(|num| println!("num={num}"))
         .sum()
 }
 
-pub fn part2(_input: &str) -> String {
-    "World".to_string()
+//
+// For the given ranges, find all numbers that consist of a sequence of
+// digits repeated at least twice.  Return their sum.
+//
+// NOTE: The largest numbers in our full input have 10 digits.
+//
+pub fn part2(input: &str) -> u64 {
+    parse_input(input)
+        .into_iter()
+        .flatten()
+        .filter(|num| {
+            match num {
+                10 ..= 99 =>                    // 2 digits; pattern is 1 digit
+                    num % 11 == 0,
+                100 ..= 999 =>                  // 3 digits; pattern is 1 digit
+                    num % 111 == 0,
+                1000 ..= 9999 =>                // 4 digits; pattern is 2 digits
+                    num % 101 == 0,
+                10000 ..= 99999 =>              // 5 digits; pattern is 1 digit
+                    num % 11111 == 0,
+                100000 ..= 999999 =>            // 6 digits; pattern is 2 or 3 digits
+                    num % 10101 == 0 || num % 1001 == 0,
+                1000000 ..= 9999999 =>          // 7 digits; pattern is 1 digit
+                    num % 1111111 == 0,
+                10000000 ..= 99999999 =>        // 8 digits; pattern is 2 or 4 digits
+                    num % 1010101 == 0 || num % 10001 == 0,
+                100000000 ..= 999999999 =>      // 9 ditits; pattern is 3 digits
+                    num % 1001001 == 0,
+                1000000000 ..= 9999999999 =>    // 10 digits; pattern is 2 or 5 digits
+                    num % 101010101 == 0 || num % 100001 == 0,
+                _ => false
+            }
+        })
+        // .inspect(|num| println!("num={num}"))
+        .sum()
 }
 
 fn parse_input(input: &str) -> Vec<RangeInclusive<u64>> {
@@ -48,7 +88,16 @@ mod tests {
     }
 
     #[test]
-    fn test_part2_example() {
-        assert_eq!(part2(EXAMPLE_INPUT), "World");
+    fn test_part1_full() {
+        assert_eq!(part1(FULL_INPUT), 17077011375);
     }
-}
+
+    #[test]
+    fn test_part2_example() {
+        assert_eq!(part2(EXAMPLE_INPUT), 4174379265);
+    }
+
+    #[test]
+    fn test_part2_full() {
+        assert_eq!(part2(FULL_INPUT), 36037497037);
+    }}
