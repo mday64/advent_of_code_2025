@@ -10,6 +10,17 @@ pub fn part2(input: &str) -> u64 {
     }).sum::<u64>()
 }
 
+//
+// Return the largest number constructed from `digits` digits within
+// `line`, in the order they appear within `line`.
+//
+// TODO: Try iterating over the characters within `line`, and keep the
+// best answer so far.  Start with the first `digits` characters of `line`.
+// Then for each following character, if it is larger than any of the
+// characters remembered so far, remove the smallest remembered character
+// and append the new character.  This would require only one pass over
+// the characters in `line`.
+//
 fn largest_num(line: &str, digits: usize) -> u64 {
     let bytes = line.as_bytes();
     let length = bytes.len();
@@ -30,12 +41,12 @@ fn largest_num(line: &str, digits: usize) -> u64 {
 // Find the largest byte with index in start..end.  Return the index and byte.
 // If the maximum value occurs multiple times, return the lowest such index.
 fn find_largest(bytes: &[u8], start: usize, end: usize) -> (usize, u8) {
-    assert!(start < end);
+    debug_assert!(start < end);
 
     let mut largest_index = start;
     let mut largest_value = bytes[start];
 
-    for index in start..end {
+    for index in (start+1)..end {
         if bytes[index] > largest_value {
             largest_index = index;
             largest_value = bytes[index];
