@@ -1,7 +1,9 @@
-use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
+
+// TODO: Instead of a HashSet, should I use a 2D array/grid?
 
 pub fn part1(input: &str) -> usize {
-    let mut rolls: HashSet<(i16, i16)> = HashSet::new();
+    let mut rolls: HashSet<(i16, i16)> = HashSet::default();
     for (row, line) in input.lines().enumerate() {
         for (col, ch) in line.chars().enumerate() {
             if ch == '@' {
@@ -18,7 +20,7 @@ pub fn part1(input: &str) -> usize {
 }
 
 pub fn part2(input: &str) -> usize {
-    let mut rolls: HashSet<(i16, i16)> = HashSet::new();
+    let mut rolls: HashSet<(i16, i16)> = HashSet::default();
     for (row, line) in input.lines().enumerate() {
         for (col, ch) in line.chars().enumerate() {
             if ch == '@' {
@@ -27,15 +29,17 @@ pub fn part2(input: &str) -> usize {
         }
     }
     let initial_count = rolls.len();
+    let mut removable = HashSet::<(i16, i16)>::default();
 
     loop {
         // TODO: Rather than considering all rolls, could we just consider
         // neighbors of just-removed rolls?
-        let removable: HashSet<(i16, i16)> = rolls.iter().filter(|(row, col)| {
+        removable.clear();
+        removable.extend(rolls.iter().filter(|(row, col)| {
             let num_neighbors = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
                 .iter().filter(|(dr, dc)| rolls.contains(&(row + dr, col + dc))).count();
             num_neighbors < 4
-        }).cloned().collect();
+        }).cloned());
 
         if removable.is_empty() {
             break;
@@ -43,7 +47,7 @@ pub fn part2(input: &str) -> usize {
 
         // eprintln!("Removing {} rolls", removable.len());
 
-        for roll in removable {
+        for roll in removable.iter() {
             rolls.remove(&roll);
         }
     }
@@ -51,6 +55,18 @@ pub fn part2(input: &str) -> usize {
     // eprintln!("{} rolls remaining", rolls.len());
 
     initial_count - rolls.len()
+}
+
+pub fn parse_input(input: &str) -> HashSet<(i16, i16)> {
+    let mut rolls: HashSet<(i16, i16)> = HashSet::default();
+    for (row, line) in input.lines().enumerate() {
+        for (col, ch) in line.chars().enumerate() {
+            if ch == '@' {
+                rolls.insert((row as i16, col as i16));
+            }
+        }
+    }
+    rolls
 }
 
 #[cfg(test)]
