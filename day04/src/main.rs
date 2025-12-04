@@ -1,4 +1,4 @@
-use day04::{part1, part2};
+use day04::{part1, part2_vec::part2_vec as part2};
 
 fn main() {
     let input = include_str!("../input.txt");
