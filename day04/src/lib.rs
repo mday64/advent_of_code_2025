@@ -1,11 +1,11 @@
 use std::collections::HashSet;
 
 pub fn part1(input: &str) -> usize {
-    let mut rolls: HashSet<(isize, isize)> = HashSet::new();
+    let mut rolls: HashSet<(i16, i16)> = HashSet::new();
     for (row, line) in input.lines().enumerate() {
         for (col, ch) in line.chars().enumerate() {
             if ch == '@' {
-                rolls.insert((row as isize, col as isize));
+                rolls.insert((row as i16, col as i16));
             }
         }
     }
@@ -18,11 +18,11 @@ pub fn part1(input: &str) -> usize {
 }
 
 pub fn part2(input: &str) -> usize {
-    let mut rolls: HashSet<(isize, isize)> = HashSet::new();
+    let mut rolls: HashSet<(i16, i16)> = HashSet::new();
     for (row, line) in input.lines().enumerate() {
         for (col, ch) in line.chars().enumerate() {
             if ch == '@' {
-                rolls.insert((row as isize, col as isize));
+                rolls.insert((row as i16, col as i16));
             }
         }
     }
@@ -31,7 +31,7 @@ pub fn part2(input: &str) -> usize {
     loop {
         // TODO: Rather than considering all rolls, could we just consider
         // neighbors of just-removed rolls?
-        let removable: HashSet<(isize, isize)> = rolls.iter().filter(|(row, col)| {
+        let removable: HashSet<(i16, i16)> = rolls.iter().filter(|(row, col)| {
             let num_neighbors = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
                 .iter().filter(|(dr, dc)| rolls.contains(&(row + dr, col + dc))).count();
             num_neighbors < 4
@@ -41,14 +41,14 @@ pub fn part2(input: &str) -> usize {
             break;
         }
 
-        eprintln!("Removing {} rolls", removable.len());
+        // eprintln!("Removing {} rolls", removable.len());
 
         for roll in removable {
             rolls.remove(&roll);
         }
     }
 
-    eprintln!("{} rolls remaining", rolls.len());
+    // eprintln!("{} rolls remaining", rolls.len());
 
     initial_count - rolls.len()
 }
