@@ -3,8 +3,8 @@ use nom::{IResult, Parser, bytes::complete::tag, character::complete::{newline, 
 use itertools::Itertools;
 
 pub fn part1(input: &str) -> usize {
-    let (mut ranges, ids) = parse_input(input);
-    ranges.sort_by_key(|range| *range.start());
+    let (mut ranges, mut ids) = parse_input(input);
+    ranges.sort_unstable_by_key(|range| *range.start());
     ranges = ranges.into_iter()
         .coalesce(|first, second| {
             if second.start() <= first.end() {
@@ -14,14 +14,27 @@ pub fn part1(input: &str) -> usize {
             }
         })
         .collect();
+    let mut ranges = ranges.into_iter();
 
-    // TODO: Would it be faster to sort the ids, and then filter/count
-    // them in order.  With both in sorted order, it should be possible
-    // to do better than O(M*N) for M ranges and N ids.  It would be
-    // similar to a merge operation.
-    ids.into_iter()
-        .filter(|id| ranges.iter().any(|range| range.contains(id)))
-        .count()
+    ids.sort_unstable();
+
+    let mut current_range = ranges.next().unwrap();
+    let mut result = 0;
+    for id in ids {
+        while id > *current_range.end() {
+            if let Some(next_range) = ranges.next() {
+                current_range = next_range;
+            } else {
+                break;
+            }
+        }
+
+        if current_range.contains(&id) {
+            result += 1;
+        }
+    }
+
+    result
 }
 
 pub fn part2(input: &str) -> usize {
