@@ -53,6 +53,44 @@ pub fn part2(input: &str) -> usize {
     .sum()
 }
 
+pub fn both(input: &str) -> (usize, u64) {
+    let (mut ranges, mut ids) = parse_input(input);
+    ranges.sort_unstable_by_key(|range| *range.start());
+    ranges = ranges.into_iter()
+        .coalesce(|first, second| {
+            if second.start() <= first.end() {
+                Ok(*first.start() ..= *first.end().max(second.end()))
+            } else {
+                Err((first, second))
+            }
+        })
+        .collect();
+
+    let result2 = ranges.iter().map(|range| range.end() - range.start() + 1).sum();
+
+    let mut ranges = ranges.into_iter();
+
+    ids.sort_unstable();
+
+    let mut current_range = ranges.next().unwrap();
+    let mut result1 = 0;
+    for id in ids {
+        while id > *current_range.end() {
+            if let Some(next_range) = ranges.next() {
+                current_range = next_range;
+            } else {
+                break;
+            }
+        }
+
+        if current_range.contains(&id) {
+            result1 += 1;
+        }
+    }
+
+    (result1, result2)
+}
+
 fn parse_input(input: &str) -> (Vec<RangeInclusive<u64>>, Vec<u64>) {
     let (_, (ranges, ids)) = all_consuming(
         separated_pair(parse_ranges, newline, parse_ids)
@@ -78,7 +116,7 @@ fn parse_ids(input: &str) -> IResult<&str, Vec<u64>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{part1, part2};
+    use super::{part1, part2, both};
     
     static EXAMPLE_INPUT: &str = "\
 3-5
@@ -113,5 +151,15 @@ mod tests {
     #[test]
     fn test_part2_full() {
         assert_eq!(part2(FULL_INPUT), 348548952146313);
+    }
+
+    #[test]
+    fn test_both_example() {
+        assert_eq!(both(EXAMPLE_INPUT), (3, 14));
+    }
+
+    #[test]
+    fn test_both_full() {
+        assert_eq!(both(FULL_INPUT), (874, 348548952146313));
     }
 }
