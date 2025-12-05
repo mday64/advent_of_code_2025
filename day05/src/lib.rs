@@ -91,7 +91,7 @@ pub fn both(input: &str) -> (usize, u64) {
     (result1, result2)
 }
 
-fn parse_input(input: &str) -> (Vec<RangeInclusive<u64>>, Vec<u64>) {
+pub fn parse_input(input: &str) -> (Vec<RangeInclusive<u64>>, Vec<u64>) {
     let (_, (ranges, ids)) = all_consuming(
         separated_pair(parse_ranges, newline, parse_ids)
     ).parse(input)

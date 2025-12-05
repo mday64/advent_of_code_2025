@@ -1,4 +1,4 @@
-use day05::{ part1, part2, both };
+use day05::{ part1, part2, both, parse_input };
 
 fn main() {
     divan::main();
@@ -19,4 +19,9 @@ fn bench_part2() {
 #[divan::bench]
 fn bench_both() {
     both(INPUT);
+}
+
+#[divan::bench]
+fn bench_parse() {
+    parse_input(INPUT);
 }
