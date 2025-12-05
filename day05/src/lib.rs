@@ -1,5 +1,6 @@
 use std::ops::RangeInclusive;
 use nom::{IResult, Parser, bytes::complete::tag, character::complete::{newline, u64}, combinator::all_consuming, multi::many1, sequence::{separated_pair, terminated}};
+use itertools::Itertools;
 
 pub fn part1(input: &str) -> usize {
     let (ranges, ids) = parse_input(input);
@@ -8,8 +9,20 @@ pub fn part1(input: &str) -> usize {
         .count()
 }
 
-pub fn part2(_input: &str) -> String {
-    "World".to_string()
+pub fn part2(input: &str) -> usize {
+    let (mut ranges, _ids) = parse_input(input);
+    ranges.sort_by_key(|range| *range.start());
+
+    // Combine overlapping ranges
+    ranges.into_iter().coalesce(|first, second| {
+        if second.start() <= first.end() {
+            Ok(*first.start() ..= *first.end().max(second.end()))
+        } else {
+            Err((first, second))
+        }
+    })
+    .map(|range| range.count())
+    .sum()
 }
 
 fn parse_input(input: &str) -> (Vec<RangeInclusive<u64>>, Vec<u64>) {
@@ -66,6 +79,11 @@ mod tests {
 
     #[test]
     fn test_part2_example() {
-        assert_eq!(part2(EXAMPLE_INPUT), "World");
+        assert_eq!(part2(EXAMPLE_INPUT), 14);
+    }
+
+    #[test]
+    fn test_part2_full() {
+        assert_eq!(part2(FULL_INPUT), 348548952146313);
     }
 }
