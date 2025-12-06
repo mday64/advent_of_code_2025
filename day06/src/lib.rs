@@ -6,8 +6,8 @@ pub fn part1(input: &str) -> u64 {
     operators.into_iter().enumerate().map(|(index, ch)| {
         let values = numbers.iter().map(|row| row[index]);
         match ch {
-            '+' => values.into_iter().sum::<u64>(),
-            '*' => values.into_iter().product(),
+            '+' => values.sum::<u64>(),
+            '*' => values.product(),
             _ => unreachable!()
         }
     }).sum()
