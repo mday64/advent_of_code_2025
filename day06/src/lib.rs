@@ -46,16 +46,21 @@ pub fn part2(input: &str) -> u64 {
         }
 
         // Gather digits from this column
-        let digits: Vec<u64> = lines.iter().filter_map(|line| {
+        let digits = lines.iter().filter_map(|line| {
             let ch = line[col];
             if ch == b' ' {
                 None
             } else {
                 Some((ch - b'0') as u64)
             }
-        }).collect();
+        });
 
-        if digits.len() == 0 {
+        let value = digits.into_iter().reduce(|acc, digit| acc * 10 + digit);
+        
+        if let Some(value) = value {
+            // Push this value
+            values.push(value);
+        } else {
             // Do the math on the gathered values
             if operator == b'+' {
                 result += values.iter().sum::<u64>();
@@ -63,10 +68,6 @@ pub fn part2(input: &str) -> u64 {
                 result += values.iter().product::<u64>();
             }
             values.clear();
-        } else {
-            // Push this value
-            let value = digits.into_iter().reduce(|acc, digit| acc * 10 + digit).unwrap();
-            values.push(value);
         }
     }
 
