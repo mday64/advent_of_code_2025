@@ -13,8 +13,63 @@ pub fn part1(input: &str) -> u64 {
     }).sum()
 }
 
+//
+// In this part, numbers are top-to-bottom in a single column.
+// The operator appears on the last line, in the first column of a problem.
+// The operators line has trailing blank spaces to match the last column of digits.
+// Numbers in a given column may be top-aligned or bottom-aligned, so just ignore
+// those spaces.  We know we've finished a problem when there are no digits in
+// a column.
+//
 pub fn part2(input: &str) -> u64 {
-    37
+    let mut lines: Vec<Vec<char>> = input
+        .lines()
+        .map(|line| line.chars().collect())
+        .collect();
+
+    // Add a blank column on the end since that triggers us to do the
+    // addition or subtraction.  (It's a terminator for the values.)
+    for line in lines.iter_mut() {
+        line.push(' ');
+    }
+
+    let operators = lines.pop().unwrap();
+
+    let mut operator = '+';     // Will be overridden by first column
+    let mut result = 0;         // Overall function result
+    let mut values: Vec<u64> = Vec::new();
+
+    for (col, op) in operators.into_iter().enumerate() {
+        if op != ' ' {
+            operator = op;
+        }
+
+        // Gather digits from this column
+        let digits: Vec<u64> = lines.iter().filter_map(|line| {
+            let ch = line[col];
+            if ch == ' ' {
+                None
+            } else {
+                Some(ch.to_digit(10).unwrap() as u64)
+            }
+        }).collect();
+
+        if digits.len() == 0 {
+            // Do the math on the gathered values
+            if operator == '+' {
+                result += values.iter().sum::<u64>();
+            } else {
+                result += values.iter().product::<u64>();
+            }
+            values.clear();
+        } else {
+            // Push this value
+            let value = digits.into_iter().fold(0, |acc, digit| acc * 10 + digit);
+            values.push(value);
+        }
+    }
+
+    result
 }
 
 fn parse_input(input: &str) -> (Vec<Vec<u64>>, Vec<char>) {
@@ -66,5 +121,10 @@ mod tests {
     #[test]
     fn test_part2_example() {
         assert_eq!(part2(EXAMPLE_INPUT), 3263827);
+    }
+
+    #[test]
+    fn test_part2_full() {
+        assert_eq!(part2(FULL_INPUT), 8674740488592);
     }
 }
