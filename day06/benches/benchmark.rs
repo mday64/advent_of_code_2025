@@ -1,10 +1,15 @@
-use day06::{ part1, part2 };
+use day06::{ part1, part2, parse_input };
 
 fn main() {
     divan::main();
 }
 
 const INPUT: &str = include_str!("../input.txt");
+
+#[divan::bench]
+fn bench_parse() {
+    parse_input(INPUT);
+}
 
 #[divan::bench]
 fn bench_part1() {

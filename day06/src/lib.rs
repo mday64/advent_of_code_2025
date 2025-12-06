@@ -35,12 +35,13 @@ pub fn part2(input: &str) -> u64 {
 
     let operators = lines.pop().unwrap();
 
-    let mut operator = b'+';     // Will be overridden by first column
+    let mut operator = b'+';    // Will be overridden by first column
     let mut result = 0;         // Overall function result
     let mut values: Vec<u64> = Vec::new();
 
     for (col, op) in operators.into_iter().enumerate() {
         if op != b' ' {
+            // Remember the operator for this problem
             operator = op;
         }
 
@@ -64,7 +65,7 @@ pub fn part2(input: &str) -> u64 {
             values.clear();
         } else {
             // Push this value
-            let value = digits.into_iter().fold(0, |acc, digit| acc * 10 + digit);
+            let value = digits.into_iter().reduce(|acc, digit| acc * 10 + digit).unwrap();
             values.push(value);
         }
     }
@@ -72,7 +73,7 @@ pub fn part2(input: &str) -> u64 {
     result
 }
 
-fn parse_input(input: &str) -> (Vec<Vec<u64>>, Vec<char>) {
+pub fn parse_input(input: &str) -> (Vec<Vec<u64>>, Vec<char>) {
     let (_, (numbers, operators)) = all_consuming(
         (many1(number_row), operator_row)
     ).parse(input).expect("Invalid input");
