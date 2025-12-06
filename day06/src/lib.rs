@@ -22,41 +22,41 @@ pub fn part1(input: &str) -> u64 {
 // a column.
 //
 pub fn part2(input: &str) -> u64 {
-    let mut lines: Vec<Vec<char>> = input
+    let mut lines: Vec<Vec<u8>> = input
         .lines()
-        .map(|line| line.chars().collect())
+        .map(|line| line.bytes().collect())
         .collect();
 
     // Add a blank column on the end since that triggers us to do the
     // addition or subtraction.  (It's a terminator for the values.)
     for line in lines.iter_mut() {
-        line.push(' ');
+        line.push(b' ');
     }
 
     let operators = lines.pop().unwrap();
 
-    let mut operator = '+';     // Will be overridden by first column
+    let mut operator = b'+';     // Will be overridden by first column
     let mut result = 0;         // Overall function result
     let mut values: Vec<u64> = Vec::new();
 
     for (col, op) in operators.into_iter().enumerate() {
-        if op != ' ' {
+        if op != b' ' {
             operator = op;
         }
 
         // Gather digits from this column
         let digits: Vec<u64> = lines.iter().filter_map(|line| {
             let ch = line[col];
-            if ch == ' ' {
+            if ch == b' ' {
                 None
             } else {
-                Some(ch.to_digit(10).unwrap() as u64)
+                Some((ch - b'0') as u64)
             }
         }).collect();
 
         if digits.len() == 0 {
             // Do the math on the gathered values
-            if operator == '+' {
+            if operator == b'+' {
                 result += values.iter().sum::<u64>();
             } else {
                 result += values.iter().product::<u64>();
