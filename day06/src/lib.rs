@@ -1,15 +1,23 @@
-use nom::{IResult, Parser, branch::alt, character::{complete::{char, multispace0, multispace1, newline, u32}}, combinator::{all_consuming, opt}, multi::{many1, separated_list1}, sequence::delimited};
+use nom::{IResult, Parser, branch::alt, character::complete::{char, multispace0, multispace1, newline, space0, space1, u64}, combinator::{all_consuming, opt}, multi::{many1, separated_list1}, sequence::delimited};
 
-pub fn part1(input: &str) -> u32 {
+pub fn part1(input: &str) -> u64 {
     let (numbers, operators) = parse_input(input);
-    42
+
+    operators.into_iter().enumerate().map(|(index, ch)| {
+        let values = numbers.iter().map(|row| row[index]);
+        match ch {
+            '+' => values.into_iter().sum::<u64>(),
+            '*' => values.into_iter().product(),
+            _ => unreachable!()
+        }
+    }).sum()
 }
 
-pub fn part2(_input: &str) -> String {
-    "World".to_string()
+pub fn part2(input: &str) -> u64 {
+    37
 }
 
-fn parse_input(input: &str) -> (Vec<Vec<u32>>, Vec<char>) {
+fn parse_input(input: &str) -> (Vec<Vec<u64>>, Vec<char>) {
     let (_, (numbers, operators)) = all_consuming(
         (many1(number_row), operator_row)
     ).parse(input).expect("Invalid input");
@@ -17,18 +25,17 @@ fn parse_input(input: &str) -> (Vec<Vec<u32>>, Vec<char>) {
     (numbers, operators)
 }
 
-fn number_row(input: &str) -> IResult<&str, Vec<u32>> {
+fn number_row(input: &str) -> IResult<&str, Vec<u64>> {
     delimited(
-        multispace0,
-        separated_list1(multispace1, u32),
-        // NOTE: The input numbers are right-aligned, so there are no spaces before the newline
-        newline
+        space0,
+        separated_list1(space1, u64),
+        (opt(space0), newline)
     ).parse(input)
 }
 
 fn operator_row(input: &str) -> IResult<&str, Vec<char>> {
     delimited(
-        multispace0,
+        space0,
         separated_list1(multispace1, alt((char('*'), char('+')))),
         opt(multispace0)
     ).parse(input)
@@ -52,7 +59,12 @@ mod tests {
     }
 
     #[test]
+    fn test_part1_full() {
+        assert_eq!(part1(FULL_INPUT), 4878670269096);
+    }
+
+    #[test]
     fn test_part2_example() {
-        assert_eq!(part2(EXAMPLE_INPUT), "World");
+        assert_eq!(part2(EXAMPLE_INPUT), 3263827);
     }
 }
