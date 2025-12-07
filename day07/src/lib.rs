@@ -63,9 +63,34 @@ pub fn both(input: &str) -> (u32, u64) {
     (splits, columns.values().sum())
 }
 
+pub fn both_array(input: &str) -> (u32, u64) {
+    let mut lines = input.lines();
+    let first_line = lines.next().unwrap();
+    let mut columns: Vec<u64> = first_line
+        .chars()
+        .map(|ch| (ch == 'S') as u64)
+        .collect();
+
+    let mut splits = 0;
+
+    for line in lines {
+        for (splitter, _) in line.match_indices('^') {
+            let column_count = columns[splitter];
+            if column_count != 0 {
+                splits += 1;
+                columns[splitter - 1] += column_count;
+                columns[splitter + 1] += column_count;
+                columns[splitter] = 0;
+            }
+        }
+    }
+
+    (splits, columns.into_iter().sum())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{part1, part2, both};
+    use super::{part1, part2, both, both_array};
     
     static EXAMPLE_INPUT: &str = include_str!("../example.txt");
     static FULL_INPUT: &str = include_str!("../input.txt");
@@ -99,4 +124,13 @@ mod tests {
     fn test_both_full() {
         assert_eq!(both(FULL_INPUT), (1687, 390684413472684));
     }
-}
+
+    #[test]
+    fn test_both_array_example() {
+        assert_eq!(both_array(EXAMPLE_INPUT), (21, 40));
+    }
+
+    #[test]
+    fn test_both_array_full() {
+        assert_eq!(both_array(FULL_INPUT), (1687, 390684413472684));
+    }}

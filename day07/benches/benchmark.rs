@@ -1,4 +1,4 @@
-use day07::{ part1, part2, both };
+use day07::{ part1, part2, both, both_array };
 
 fn main() {
     divan::main();
@@ -19,4 +19,9 @@ fn bench_part2() {
 #[divan::bench]
 fn bench_both() {
     both(INPUT);
+}
+
+#[divan::bench]
+fn bench_both_array() {
+    both_array(INPUT);
 }
