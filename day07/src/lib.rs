@@ -1,16 +1,18 @@
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 pub fn part1(input: &str) -> u32 {
     let mut lines = input.lines();
     let first_line = lines.next().unwrap();
-    let mut columns = HashSet::from([first_line.find('S').unwrap()]);
+    let starting_col = first_line.find('S').unwrap();
+    let mut columns = HashSet::<usize>::default();
+    columns.insert(starting_col);
+
     let mut splits = 0;
 
     for line in lines {
         for (splitter, _) in line.match_indices('^') {
-            if columns.contains(&splitter) {
+            if columns.remove(&splitter) {
                 splits += 1;
-                columns.remove(&splitter);
                 columns.insert(splitter - 1);
                 columns.insert(splitter + 1);
             }
@@ -24,7 +26,7 @@ pub fn part2(input: &str) -> u64 {
     let mut lines = input.lines();
     let first_line = lines.next().unwrap();
     let starting_col = first_line.find('S').unwrap();
-    let mut columns = HashMap::<usize, u64>::new();
+    let mut columns = HashMap::<usize, u64>::default();
     columns.insert(starting_col, 1);
 
     for line in lines {
