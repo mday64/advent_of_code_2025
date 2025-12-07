@@ -20,8 +20,27 @@ pub fn part1(input: &str) -> u32 {
     splits
 }
 
-pub fn part2(_input: &str) -> String {
-    "World".to_string()
+pub fn part2(input: &str) -> usize {
+    let mut lines = input.lines();
+    let first_line = lines.next().unwrap();
+    let mut columns = vec![first_line.find('S').unwrap()];
+
+    // NOTE: columns can and will contain duplicates if the beam ended up
+    // in a given column because one path had it coming from the left, and
+    // another path had it coming from the right.
+    for line in lines {
+        for (splitter, _) in line.match_indices('^') {
+            columns = columns.into_iter().flat_map(|col| {
+                if col == splitter {
+                    vec![col - 1, col + 1]
+                } else {
+                    vec![col]
+                }
+            }).collect();
+        }
+    }
+
+    columns.len()
 }
 
 #[cfg(test)]
@@ -43,6 +62,6 @@ mod tests {
 
     #[test]
     fn test_part2_example() {
-        assert_eq!(part2(EXAMPLE_INPUT), "World");
+        assert_eq!(part2(EXAMPLE_INPUT), 40);
     }
 }
