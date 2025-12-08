@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
 use itertools::Itertools;
 use parsing::parse_input;
 
@@ -37,7 +37,11 @@ pub fn part1(input: &str, num_connections: usize) -> usize {
 
     // Create a list/set of components (circuits).
     // Initially, each point is in its own separate component.
-    let mut circuits = points.iter().map(|point| HashSet::from([point])).collect_vec();
+    let mut circuits = points.iter().map(|point| {
+        let mut set = HashSet::default();
+        set.insert(point);
+        set
+    }).collect_vec();
 
     for _ in 0..num_connections {
         // Find and remove the shortest remaining distance -> two points
@@ -82,7 +86,11 @@ pub fn part2(input: &str) -> u64 {
 
     // Create a list/set of components (circuits).
     // Initially, each point is in its own separate component.
-    let mut circuits = points.iter().map(|point| HashSet::from([point])).collect_vec();
+    let mut circuits = points.iter().map(|point| {
+        let mut set = HashSet::default();
+        set.insert(point);
+        set
+    }).collect_vec();
 
     loop {
         // Find and remove the shortest remaining distance -> two points
