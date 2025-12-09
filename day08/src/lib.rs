@@ -1,8 +1,10 @@
+use std::collections::BinaryHeap;
+use core::cmp::Reverse;
 use rustc_hash::FxHashSet as HashSet;
 use itertools::Itertools;
 use parsing::parse_input;
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, PartialOrd, Ord)]
 struct Point {
     x: u64,
     y: u64,
@@ -24,10 +26,12 @@ impl Point {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct Pair<'a> {
+    // Note: distance must be first so that pairs are sorted by distance
+    distance: u64,
     p1: &'a Point,
     p2: &'a Point,
-    distance: u64
 }
 
 impl<'a> Pair<'a> {
@@ -61,7 +65,6 @@ pub fn part1(input: &str, num_connections: usize) -> usize {
     for _ in 0..num_connections {
         // Find and remove the shortest remaining distance -> two points
         let pair = pairs.pop().unwrap();
-        // dbg!(&pair);
 
         // If the two points are in different circuits, then connect them.
         // The hard part here is getting mutable refences to both circuits
@@ -81,7 +84,6 @@ pub fn part1(input: &str, num_connections: usize) -> usize {
     // Return the sum of the three largest sizes
     let mut lengths = circuits.iter().map(|circuit| circuit.len()).collect_vec();
     lengths.sort_unstable();
-    // dbg!(&lengths);
     lengths.iter().rev().take(3).product()
 }
 
@@ -110,7 +112,6 @@ pub fn part2(input: &str) -> u64 {
     loop {
         // Find and remove the shortest remaining distance -> two points
         let pair = pairs.pop().unwrap();
-        // dbg!(&pair);
 
         // If the two points are in different circuits, then connect them.
         // The hard part here is getting mutable refences to both circuits
@@ -138,11 +139,11 @@ pub fn both(input: &str, num_connections: usize) -> (usize, u64) {
 
     // Produce a list of all unique pairs of points, sorted by
     // distance between the points.
-    let mut pairs = points.iter()
+    let pairs = points.iter()
         .combinations(2)
-        .map(|p| Pair::new(p[0], p[1]))
+        .map(|p| Reverse(Pair::new(p[0], p[1])))
         .collect_vec() ;
-    pairs.sort_unstable_by_key(|pair| pair.distance);
+    let mut pairs = BinaryHeap::from(pairs);
 
     // Create a list/set of components (circuits).
     // Initially, each point is in its own separate component.
@@ -152,13 +153,16 @@ pub fn both(input: &str, num_connections: usize) -> (usize, u64) {
         set
     }).collect_vec();
 
-    for (i, pair) in pairs.into_iter().enumerate() {
-        if i == num_connections {
+    let mut num_iterations = 0;
+    while let Some(Reverse(pair)) = pairs.pop() {
+        if num_iterations == num_connections {
             result1 = circuits.iter()
                 .map(|circuit| circuit.len())
                 .k_largest(3)
                 .product();
         }
+        num_iterations += 1;
+
         // If the two points are in different circuits, then connect them.
         // The hard part here is getting mutable refences to both circuits
         // at the same time.
