@@ -1,11 +1,9 @@
-use day08::{part1, part2};
+use day08::both;
 
 fn main() {
     let input = include_str!("../input.txt");
 
-    let result1 = part1(input, 1000);
+    let (result1, result2) = both(input, 1000);
     println!("Part 1: {result1}");
-
-    let result2 = part2(input);
     println!("Part 2: {result2}");
 }

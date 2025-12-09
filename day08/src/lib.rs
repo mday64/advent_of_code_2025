@@ -130,6 +130,56 @@ pub fn part2(input: &str) -> u64 {
     }
 }
 
+pub fn both(input: &str, num_connections: usize) -> (usize, u64) {
+    let mut result1 = 0;
+
+    // Parse the input
+    let points = parse_input(input);
+
+    // Produce a list of all unique pairs of points, sorted by
+    // distance between the points.
+    let mut pairs = points.iter()
+        .combinations(2)
+        .map(|p| Pair::new(p[0], p[1]))
+        .collect_vec() ;
+    pairs.sort_unstable_by_key(|pair| pair.distance);
+
+    // Create a list/set of components (circuits).
+    // Initially, each point is in its own separate component.
+    let mut circuits = points.iter().map(|point| {
+        let mut set = HashSet::default();
+        set.insert(point);
+        set
+    }).collect_vec();
+
+    for (i, pair) in pairs.into_iter().enumerate() {
+        if i == num_connections {
+            result1 = circuits.iter()
+                .map(|circuit| circuit.len())
+                .k_largest(3)
+                .product();
+        }
+        // If the two points are in different circuits, then connect them.
+        // The hard part here is getting mutable refences to both circuits
+        // at the same time.
+        let c1 = circuits.iter().position(|circuit| circuit.contains(pair.p1)).unwrap();
+        if !circuits[c1].contains(pair.p2) {
+            if circuits.len() == 2 {
+                // Connecting into a single circuit
+                return (result1, pair.p1.x * pair.p2.x);
+            }
+            let c2 = circuits.iter().position(|circuit| circuit.contains(pair.p2)).unwrap();
+            let c_min = c1.min(c2);
+            let c_max = c1.max(c2);
+            let (part1, part2) = circuits.split_at_mut(c_max);
+            part1[c_min].extend(part2[0].drain());
+            circuits.remove(c_max);
+        }
+    }
+
+    unreachable!()
+}
+
 mod parsing {
     use super::Point;
     use nom::{IResult, Parser, character::complete::{char, newline, u64}, combinator::all_consuming, multi::many1, sequence::terminated};
@@ -154,7 +204,7 @@ mod parsing {
 
 #[cfg(test)]
 mod tests {
-    use super::{part1, part2};
+    use super::{part1, part2, both};
     
     static EXAMPLE_INPUT: &str = include_str!("../example.txt");
     static FULL_INPUT: &str = include_str!("../input.txt");
@@ -177,5 +227,15 @@ mod tests {
     #[test]
     fn test_part2_full() {
         assert_eq!(part2(FULL_INPUT), 2347225200);
+    }
+
+    #[test]
+    fn test_both_example() {
+        assert_eq!(both(EXAMPLE_INPUT, 10), (40, 25272));
+    }
+
+    #[test]
+    fn test_both_full() {
+        assert_eq!(both(FULL_INPUT, 1000), (127551, 2347225200));
     }
 }
