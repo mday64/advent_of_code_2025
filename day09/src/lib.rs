@@ -27,8 +27,7 @@ pub fn part2(input: &str) -> u64 {
     // that we can iterate windows of consecutive points without worrying
     // about wrap-around from the end to the start of the vector.
     //
-    let (_, mut points) = parse_input(input).expect("Invalid input");
-    points.push(*points.first().unwrap());
+    let (_, points) = parse_input(input).expect("Invalid input");
     points.iter()
         .tuple_combinations()
         .filter_map(|(p1, p2)| {
@@ -100,6 +99,12 @@ impl Rect {
     // that the first and last point in region are the same.
     //
     fn contained_within_region(&self, region: &[Point]) -> bool {
+        // Test the line between the first and last points.
+        //
+        // It would be correct, but much slower, to do:
+        //  !region.iter().chain(&[region[0]])
+        //
+        !self.interior_intersects(&region[0], region.last().unwrap()) &&
         !region.iter()
             .tuple_windows()
             .any(|(p1, p2)| self.interior_intersects(p1, p2))
