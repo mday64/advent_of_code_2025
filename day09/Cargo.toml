@@ -1,0 +1,15 @@
+[package]
+name = "day09"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+nom.workspace = true
+itertools.workspace = true
+
+[dev-dependencies]
+divan.workspace = true
+
+[[bench]]
+name = "benchmark"
+harness = false
