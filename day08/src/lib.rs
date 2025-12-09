@@ -24,6 +24,18 @@ impl Point {
     }
 }
 
+struct Pair<'a> {
+    p1: &'a Point,
+    p2: &'a Point,
+    distance: u64
+}
+
+impl<'a> Pair<'a> {
+    fn new(p1: &'a Point, p2: &'a Point) -> Self {
+        Pair { p1, p2, distance: p1.distance_to(p2) }
+    }
+}
+
 pub fn part1(input: &str, num_connections: usize) -> usize {
     // Parse the input
     let points = parse_input(input);
@@ -31,8 +43,11 @@ pub fn part1(input: &str, num_connections: usize) -> usize {
     // Produce a list of all unique pairs of points, sorted by
     // distance between the points.  Sorted from largest distance
     // to smallest distance, so that the smallest can be .pop()'ed.
-    let mut pairs = points.iter().combinations(2).collect_vec();
-    pairs.sort_unstable_by_key(|pair| pair[0].distance_to(&pair[1]));
+    let mut pairs = points.iter()
+        .combinations(2)
+        .map(|p| Pair::new(p[0], p[1]))
+        .collect_vec() ;
+    pairs.sort_unstable_by_key(|pair| pair.distance);
     pairs.reverse();
 
     // Create a list/set of components (circuits).
@@ -51,18 +66,15 @@ pub fn part1(input: &str, num_connections: usize) -> usize {
         // If the two points are in different circuits, then connect them.
         // The hard part here is getting mutable refences to both circuits
         // at the same time.
-        let mut indices = pair.iter().map(|point|
-            circuits.iter().position(|circuit| circuit.contains(point)).unwrap()
-        ).collect_vec();
-        if indices[0] != indices[1] {
-            indices.sort_unstable();
-            // dbg!(&indices);
-            let (part1, part2) = circuits.split_at_mut(indices[1]);
-            part1[indices[0]].extend(part2[0].drain());
-            circuits.remove(indices[1]);
-            // dbg!(&circuits);
+        let c1 = circuits.iter().position(|circuit| circuit.contains(pair.p1)).unwrap();
+        if !circuits[c1].contains(pair.p2) {
+            let c2 = circuits.iter().position(|circuit| circuit.contains(pair.p2)).unwrap();
+            let c_min = c1.min(c2);
+            let c_max = c1.max(c2);
+            let (part1, part2) = circuits.split_at_mut(c_max);
+            part1[c_min].extend(part2[0].drain());
+            circuits.remove(c_max);
         }
-
     }
 
     // Sort components/circuits by number of points
@@ -80,8 +92,11 @@ pub fn part2(input: &str) -> u64 {
     // Produce a list of all unique pairs of points, sorted by
     // distance between the points.  Sorted from largest distance
     // to smallest distance, so that the smallest can be .pop()'ed.
-    let mut pairs = points.iter().combinations(2).collect_vec();
-    pairs.sort_unstable_by_key(|pair| pair[0].distance_to(&pair[1]));
+    let mut pairs = points.iter()
+        .combinations(2)
+        .map(|p| Pair::new(p[0], p[1]))
+        .collect_vec() ;
+    pairs.sort_unstable_by_key(|pair| pair.distance);
     pairs.reverse();
 
     // Create a list/set of components (circuits).
@@ -100,21 +115,18 @@ pub fn part2(input: &str) -> u64 {
         // If the two points are in different circuits, then connect them.
         // The hard part here is getting mutable refences to both circuits
         // at the same time.
-        let mut indices = pair.iter().map(|point|
-            circuits.iter().position(|circuit| circuit.contains(point)).unwrap()
-        ).collect_vec();
-        if indices[0] != indices[1] {
+        let c1 = circuits.iter().position(|circuit| circuit.contains(pair.p1)).unwrap();
+        if !circuits[c1].contains(pair.p2) {
             if circuits.len() == 2 {
-                return pair[0].x * pair[1].x;
+                return pair.p1.x * pair.p2.x;
             }
-            indices.sort_unstable();
-            // dbg!(&indices);
-            let (part1, part2) = circuits.split_at_mut(indices[1]);
-            part1[indices[0]].extend(part2[0].drain());
-            circuits.remove(indices[1]);
-            // dbg!(&circuits);
+            let c2 = circuits.iter().position(|circuit| circuit.contains(pair.p2)).unwrap();
+            let c_min = c1.min(c2);
+            let c_max = c1.max(c2);
+            let (part1, part2) = circuits.split_at_mut(c_max);
+            part1[c_min].extend(part2[0].drain());
+            circuits.remove(c_max);
         }
-
     }
 }
 
