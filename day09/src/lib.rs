@@ -1,3 +1,4 @@
+use std::collections::BinaryHeap;
 use nom::{IResult, Parser, character::complete::{char, newline, u64}, combinator::all_consuming, multi::many1, sequence::{separated_pair, terminated}};
 use itertools::Itertools;
 
@@ -22,11 +23,6 @@ pub fn part1(input: &str) -> u64 {
 // of the rectangle, and return the maximum area.
 //
 pub fn part2(input: &str) -> u64 {
-    //
-    // Parse the input.  Copy the first point to the end of the vector so
-    // that we can iterate windows of consecutive points without worrying
-    // about wrap-around from the end to the start of the vector.
-    //
     let (_, points) = parse_input(input).expect("Invalid input");
     points.iter()
         .tuple_combinations()
@@ -42,7 +38,31 @@ pub fn part2(input: &str) -> u64 {
         .unwrap()
 }
 
-#[derive(Clone, Copy)]
+pub fn part2_heap(input: &str) -> u64 {
+    #[derive(PartialEq, Eq, PartialOrd, Ord)]
+    struct HeapRect<'a> {
+        area: u64,
+        p1: &'a Point,
+        p2: &'a Point,
+    }
+
+    let (_, points) = parse_input(input).expect("Invalid input");
+    let heap = points.iter()
+        .tuple_combinations()
+        .map(|(p1, p2)| HeapRect { area: p1.area(p2), p1, p2 })
+        .collect_vec();
+    let mut heap = BinaryHeap::from(heap);
+
+    while let Some(rect) = heap.pop() {
+        if Rect::new(rect.p1, rect.p2).contained_within_region(&points) {
+            return rect.area;
+        }
+    }
+
+    unreachable!()
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Point {
     x: u64,
     y: u64,
@@ -125,6 +145,8 @@ fn parse_input(input: &str) -> IResult<&str, Vec<Point>> {
 
 #[cfg(test)]
 mod tests {
+    use crate::part2_heap;
+
     use super::{part1, part2};
     
     static EXAMPLE_INPUT: &str = "\
@@ -157,5 +179,15 @@ mod tests {
     #[test]
     fn test_part2_full() {
         assert_eq!(part2(FULL_INPUT), 1450414119);
+    }
+
+    #[test]
+    fn test_part2_heap_example() {
+        assert_eq!(part2_heap(EXAMPLE_INPUT), 24);
+    }
+
+    #[test]
+    fn test_part2_heap_full() {
+        assert_eq!(part2_heap(FULL_INPUT), 1450414119);
     }
 }
