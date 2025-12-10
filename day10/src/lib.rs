@@ -1,8 +1,8 @@
 mod parsing;
 use parsing::parse_input;
-use pathfinding::prelude::dijkstra;
+use pathfinding::prelude::{bfs, dijkstra};
 
-pub fn part1(input: &str) -> u32 {
+pub fn part1(input: &str) -> usize {
     let (_, machines) = parse_input(input).expect("Invalid input");
 
     machines.iter().map(|machine| machine.configure_indicators()).sum()
@@ -26,7 +26,7 @@ pub struct Machine {
 impl Machine {
     // Return the number of button presses to get the indicator lights
     // to match the machine definition.
-    fn configure_indicators(&self) -> u32 {
+    fn configure_indicators(&self) -> usize {
         // Starting state: all indicators off
         let start: Vec<bool> = self.indicators.iter().map(|_| false).collect();
         let success = |state: &Vec<bool>| state == &self.indicators;
@@ -36,11 +36,11 @@ impl Machine {
                 for &i in button {
                     lights[i as usize] = !lights[i as usize];
                 }
-                (lights, 1)
+                lights
             }).collect::<Vec<_>>()
         };
-        let (_path, cost) = dijkstra(&start, successors, success).unwrap();
-        cost
+        let path = bfs(&start, successors, success).unwrap();
+        path.len() - 1
     }
 
     // Return the number of button presses to get the joltage levels
