@@ -5,11 +5,13 @@ use pathfinding::prelude::dijkstra;
 pub fn part1(input: &str) -> u32 {
     let (_, machines) = parse_input(input).expect("Invalid input");
 
-    machines.iter().map(|machine| machine.configure_presses()).sum()
+    machines.iter().map(|machine| machine.configure_indicators()).sum()
 }
 
-pub fn part2(_input: &str) -> String {
-    "World".to_string()
+pub fn part2(input: &str) -> u32 {
+    let (_, machines) = parse_input(input).expect("Invalid input");
+
+    machines.iter().map(|machine| machine.configure_joltages()).sum()
 }
 
 // Button is a list of indicators that it toggles
@@ -24,7 +26,7 @@ pub struct Machine {
 impl Machine {
     // Return the number of button presses to get the indicator lights
     // to match the machine definition.
-    fn configure_presses(&self) -> u32 {
+    fn configure_indicators(&self) -> u32 {
         // Starting state: all indicators off
         let start: Vec<bool> = self.indicators.iter().map(|_| false).collect();
         let success = |state: &Vec<bool>| state == &self.indicators;
@@ -35,6 +37,31 @@ impl Machine {
                     lights[i as usize] = !lights[i as usize];
                 }
                 (lights, 1)
+            }).collect::<Vec<_>>()
+        };
+        let (_path, cost) = dijkstra(&start, successors, success).unwrap();
+        cost
+    }
+
+    // Return the number of button presses to get the joltage levels
+    // to match the machine definition.
+    fn configure_joltages(&self) -> u32 {
+        // Starting state: all joltages are zero
+        let start: Vec<u32> = self.joltages.iter().map(|_| 0).collect();
+        let success = |state: &Vec<u32>| state == &self.joltages;
+        let successors = |state: &Vec<u32>| {
+            self.buttons.iter().filter_map(|button| {
+                let mut joltages = state.clone();
+                for &i in button {
+                    joltages[i as usize] += 1;
+                }
+                if joltages.iter().zip(self.joltages.iter())
+                    .all(|(v1, v2)| v1 <= v2)
+                {
+                    Some((joltages, 1))
+                } else {
+                    None
+                }
             }).collect::<Vec<_>>()
         };
         let (_path, cost) = dijkstra(&start, successors, success).unwrap();
@@ -65,6 +92,6 @@ mod tests {
 
     #[test]
     fn test_part2_example() {
-        assert_eq!(part2(EXAMPLE_INPUT), "World");
+        assert_eq!(part2(EXAMPLE_INPUT), 33);
     }
 }
