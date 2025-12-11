@@ -19,6 +19,7 @@ pub fn part2(_input: &str) -> u32 {
 pub struct Machine {
     indicators: u32,
     buttons: Vec<u32>,
+    #[allow(unused)]
     joltages: Vec<u32>,
 }
 
