@@ -10,8 +10,22 @@ pub fn part1(input: &str) -> u32 {
     count_paths("you", "out", &graph)
 }
 
-pub fn part2(_input: &str) -> String {
-    "World".to_string()
+//
+// Find the number of distinct paths from "svr" to "out" that pass through
+// both "dac" and "fft" (in either order).
+//
+pub fn part2(input: &str) -> u32 {
+    let graph = parse_input(input);
+    (
+        dbg!(count_paths("svr", "dac", &graph)) *
+        dbg!(count_paths("dac", "fft", &graph)) *
+        dbg!(count_paths("fft", "out", &graph))
+    ) +
+    (
+        dbg!(count_paths("svr", "fft", &graph)) *
+        dbg!(count_paths("fft", "dac", &graph)) *
+        dbg!(count_paths("dac", "out", &graph))
+    )
 }
 
 fn count_paths(from: &str, to: &str, graph: &FxHashMap<&str, Vec<&str>>) -> u32 {
@@ -33,12 +47,14 @@ fn dfs<T: FnMut(&str)>(start: &str, graph: &FxHashMap<&str, Vec<&str>>, visit: &
 }
 
 fn parse_input(input: &str) -> FxHashMap<&str, Vec<&str>> {
-    let mut result: FxHashMap<&str, Vec<&str>> = input.lines()
-    .map(|line| {
-        let (node, rest) = line.split_once(": ").unwrap();
-        let neighbors = rest.split_ascii_whitespace().collect();
-        (node, neighbors)
-    }).collect();
+    let mut result: FxHashMap<&str, Vec<&str>> = input
+        .lines()
+        .map(|line| {
+            let (node, rest) = line.split_once(": ").unwrap();
+            let neighbors = rest.split_ascii_whitespace().collect();
+            (node, neighbors)
+        })
+        .collect();
     result.insert("out", vec![]);
     result
 }
@@ -46,7 +62,7 @@ fn parse_input(input: &str) -> FxHashMap<&str, Vec<&str>> {
 #[cfg(test)]
 mod tests {
     use super::{part1, part2};
-    
+
     static FULL_INPUT: &str = include_str!("../input.txt");
 
     #[test]
@@ -88,6 +104,6 @@ fff: ggg hhh
 ggg: out
 hhh: out
 ";
-        assert_eq!(part2(example), "World");
+        assert_eq!(part2(example), 2);
     }
 }
