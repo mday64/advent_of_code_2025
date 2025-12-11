@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 rustc-hash.workspace = true
+pathfinding.workspace = true
 
 [dev-dependencies]
 divan.workspace = true
