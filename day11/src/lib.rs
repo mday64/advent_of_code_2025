@@ -7,18 +7,22 @@ use rustc_hash::FxHashMap;
 // caches the nodes it has visited, and would only return "out" once.
 pub fn part1(input: &str) -> u32 {
     let graph = parse_input(input);
-    let mut result = 0;
-    // This feels like I'm declaring the closure wrong.  I shouldn't need &mut.
-    dfs("you", &graph, &mut |node| {
-        if node == "out" {
-            result += 1;
-        }
-    });
-    result
+    count_paths("you", "out", &graph)
 }
 
 pub fn part2(_input: &str) -> String {
     "World".to_string()
+}
+
+fn count_paths(from: &str, to: &str, graph: &FxHashMap<&str, Vec<&str>>) -> u32 {
+    let mut result = 0;
+    // This feels like I'm declaring the closure wrong.  I shouldn't need &mut.
+    dfs(from, graph, &mut |node| {
+        if node == to {
+            result += 1;
+        }
+    });
+    result
 }
 
 fn dfs<T: FnMut(&str)>(start: &str, graph: &FxHashMap<&str, Vec<&str>>, visit: &mut T) {
@@ -43,7 +47,11 @@ fn parse_input(input: &str) -> FxHashMap<&str, Vec<&str>> {
 mod tests {
     use super::{part1, part2};
     
-    static EXAMPLE_INPUT: &str = "\
+    static FULL_INPUT: &str = include_str!("../input.txt");
+
+    #[test]
+    fn test_part1_example() {
+        let example = "\
 aaa: you hhh
 you: bbb ccc
 bbb: ddd eee
@@ -55,11 +63,7 @@ ggg: out
 hhh: ccc fff iii
 iii: out
 ";
-    static FULL_INPUT: &str = include_str!("../input.txt");
-
-    #[test]
-    fn test_part1_example() {
-        assert_eq!(part1(EXAMPLE_INPUT), 5);
+        assert_eq!(part1(example), 5);
     }
 
     #[test]
@@ -69,6 +73,21 @@ iii: out
 
     #[test]
     fn test_part2_example() {
-        assert_eq!(part2(EXAMPLE_INPUT), "World");
+        let example = "\
+svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out
+";
+        assert_eq!(part2(example), "World");
     }
 }
