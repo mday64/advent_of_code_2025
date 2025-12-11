@@ -52,7 +52,7 @@ pub fn part2(input: &str) -> usize {
         // Count paths from svr to dac, without fft
         let svr_dac = count_paths(
             "svr",
-            |&node| graph[node].iter().filter(|&&node| node != "fft").cloned(),
+            |&node| graph[node].iter().cloned(),
             |&node| node == "dac");
         
         let fft_out = count_paths(
