@@ -1,23 +1,31 @@
-use crate::{Button, Machine};
-use nom::{IResult, Parser, branch::alt, character::complete::{char, newline, u8, u32}, combinator::all_consuming, multi::{many1, separated_list1}, sequence::delimited};
+use crate::Machine;
+use nom::{IResult, Parser, branch::alt, character::complete::{char, newline, u32}, combinator::all_consuming, multi::{many1, separated_list1}, sequence::delimited};
 
-fn indicators(input: &str) -> IResult<&str, Vec<bool>> {
-    delimited(
+fn indicators(input: &str) -> IResult<&str, u32> {
+    let (input, chars) = delimited(
         char('['),
-        many1(alt((char('.').map(|_| false), char('#').map(|_| true)))),
+        many1(alt((char('.'), char('#')))),
         char(']')
-    ).parse(input)
+    ).parse(input)?;
+
+    let mask = chars.into_iter().rev()
+        .fold(0, |mask, ch| mask * 2 + if ch == '#' { 1 } else { 0 });
+
+    Ok((input, mask))
 }
 
-fn button(input: &str) -> IResult<&str, Button> {
-    delimited(
+fn button(input: &str) -> IResult<&str, u32> {
+    let (input, nums) = delimited(
         char('('),
-        separated_list1(char(','), u8),
+        separated_list1(char(','), u32),
         char(')')
-    ).parse(input)
+    ).parse(input)?;
+
+    let mask = nums.iter().fold(0u32, |mask, num| mask + (1 << num));
+    Ok((input, mask))
 }
 
-fn buttons(input: &str) -> IResult<&str, Vec<Button>> {
+fn buttons(input: &str) -> IResult<&str, Vec<u32>> {
     separated_list1(char(' '), button).parse(input)
 }
 
