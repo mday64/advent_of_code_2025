@@ -14,18 +14,21 @@ pub fn part1(input: &str) -> u32 {
 // Find the number of distinct paths from "svr" to "out" that pass through
 // both "dac" and "fft" (in either order).
 //
+// Assuming that there are no cycles in the graph, there will either
+// be a path from "dac" to "fft", or "fft" to "dac", but not both.
+//
 pub fn part2(input: &str) -> u32 {
     let graph = parse_input(input);
-    (
+    let dac_to_fft = dbg!(count_paths("dac", "fft", &graph));
+    if dac_to_fft != 0 {
         dbg!(count_paths("svr", "dac", &graph)) *
-        dbg!(count_paths("dac", "fft", &graph)) *
+        dac_to_fft *
         dbg!(count_paths("fft", "out", &graph))
-    ) +
-    (
+    } else {
         dbg!(count_paths("svr", "fft", &graph)) *
         dbg!(count_paths("fft", "dac", &graph)) *
         dbg!(count_paths("dac", "out", &graph))
-    )
+    }
 }
 
 fn count_paths(from: &str, to: &str, graph: &FxHashMap<&str, Vec<&str>>) -> u32 {
