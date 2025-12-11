@@ -1,31 +1,16 @@
 use rustc_hash::FxHashMap;
+use pathfinding::prelude::count_paths;
 
 //
 // Find the number of distinct paths from node "you" to node "out".
 //
-// NOTE: I can't use pathfinding::directed::dfs::dfs_reach because it
-// caches the nodes it has visited, and would only return "out" once.
-pub fn part1(input: &str) -> u32 {
+pub fn part1(input: &str) -> usize {
     let graph = parse_input(input);
-    let mut result = 0;
-    // This feels like I'm declaring the closure wrong.  I shouldn't need &mut.
-    dfs("you", &graph, &mut |node| {
-        if node == "out" {
-            result += 1;
-        }
-    });
-    result
+    count_paths("you", |node| graph[node].iter().cloned(), |&node| node == "out")
 }
 
 pub fn part2(_input: &str) -> String {
     "World".to_string()
-}
-
-fn dfs<T: FnMut(&str)>(start: &str, graph: &FxHashMap<&str, Vec<&str>>, visit: &mut T) {
-    visit(start);
-    for &neighbor in graph[start].iter() {
-        dfs(neighbor, graph, visit);
-    }
 }
 
 fn parse_input(input: &str) -> FxHashMap<&str, Vec<&str>> {
