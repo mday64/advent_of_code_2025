@@ -60,14 +60,13 @@ mod tests {
 // when it comes to solving the problem.  But it's enough to get the
 // parsing started now.
 struct Shape {
-    grid: Vec<Vec<char>>,
     area: u32,
 }
 
 impl Shape {
     fn new(grid: Vec<Vec<char>>) -> Shape {
         let area = grid.iter().flatten().filter(|&&c| c == '#').count() as u32;
-        Shape{grid, area}
+        Shape{area}
     }
 }
 
