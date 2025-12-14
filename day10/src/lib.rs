@@ -1,7 +1,6 @@
 mod parsing;
 use parsing::parse_input;
 use pathfinding::prelude::bfs;
-use simplex::{Simplex, SimplexConstraint};
 
 pub fn part1(input: &str) -> usize {
     let (_, machines) = parse_input(input).expect("Invalid input");
@@ -49,33 +48,7 @@ impl Machine {
     // Return the minimum number of button presses to get the joltages
     // to match the machine definition.
     fn configure_joltages(&self) -> u32 {
-        let objective = vec![1.0; self.buttons.len()];
-        dbg!(&objective);
-        let mut constraints: Vec<SimplexConstraint> = Vec::new();
-
-        // Construct the constraints for each joltage.
-        for (index, joltage) in self.joltages.iter().enumerate() {
-            let coefficients: Vec<f64> = self.buttons.iter().map(|button| {
-                if button & (1 << index) != 0 {
-                    1.0
-                } else {
-                    0.0
-                }
-            }).collect();
-            dbg!(&coefficients, joltage);
-            constraints.push(SimplexConstraint::Equal(coefficients, *joltage as f64));
-        }
-        
-        let program = Simplex::minimize(&objective).with(constraints);
-        let mut simplex = program.unwrap();
-        let presses = match simplex.solve() {
-            simplex::SimplexOutput::UniqueOptimum(x) => x,
-            simplex::SimplexOutput::MultipleOptimum(x) => x,
-            simplex::SimplexOutput::InfiniteSolution => todo!(),
-            simplex::SimplexOutput::NoSolution => todo!(),
-        };
-
-        presses as u32
+        todo!()
     }
 }
 
