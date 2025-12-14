@@ -1,31 +1,23 @@
 use crate::Machine;
 use nom::{IResult, Parser, branch::alt, character::complete::{char, newline, u32}, combinator::all_consuming, multi::{many1, separated_list1}, sequence::delimited};
 
-fn indicators(input: &str) -> IResult<&str, u32> {
-    let (input, chars) = delimited(
+fn indicators(input: &str) -> IResult<&str, Vec<char>> {
+    delimited(
         char('['),
         many1(alt((char('.'), char('#')))),
         char(']')
-    ).parse(input)?;
-
-    let mask = chars.into_iter().rev()
-        .fold(0, |mask, ch| mask * 2 + if ch == '#' { 1 } else { 0 });
-
-    Ok((input, mask))
+    ).parse(input)
 }
 
-fn button(input: &str) -> IResult<&str, u32> {
-    let (input, nums) = delimited(
+fn button(input: &str) -> IResult<&str, Vec<u32>> {
+    delimited(
         char('('),
         separated_list1(char(','), u32),
         char(')')
-    ).parse(input)?;
-
-    let mask = nums.iter().fold(0u32, |mask, num| mask + (1 << num));
-    Ok((input, mask))
+    ).parse(input)
 }
 
-fn buttons(input: &str) -> IResult<&str, Vec<u32>> {
+fn buttons(input: &str) -> IResult<&str, Vec<Vec<u32>>> {
     separated_list1(char(' '), button).parse(input)
 }
 

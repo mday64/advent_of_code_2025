@@ -23,8 +23,8 @@ pub fn part2(input: &str) -> u32 {
 
 #[derive(Debug)]
 pub struct Machine {
-    indicators: u32,
-    buttons: Vec<u32>,
+    indicators: Vec<char>,
+    buttons: Vec<Vec<u32>>,
     #[allow(unused)]
     joltages: Vec<u32>,
 }
@@ -33,11 +33,25 @@ impl Machine {
     // Return the number of button presses to get the indicator lights
     // to match the machine definition.
     fn configure_indicators(&self) -> usize {
+        // Convert the indicators vector to a bit mask
+        let indicators: u32 = self.indicators.iter()
+            .rev()
+            .fold(0, |mask, &ch| {
+                mask * 2 + if ch == '#' { 1 } else { 0 }
+            });
+
+        // Convert each button from a vector to a bit mask
+        let buttons = self.buttons.iter().map(|button | {
+            button.iter().fold(0, |mask, index| {
+                mask + (1 << index)
+            })
+        }).collect::<Vec<u32>>();
+
         // Starting state: all indicators off
         let start = 0u32;
-        let success = |state: &u32| state == &self.indicators;
+        let success = |state: &u32| state == &indicators;
         let successors = |state: &u32| {
-            self.buttons.iter()
+            buttons.iter()
                 .map(|button| state ^ button)
                 .collect::<Vec<_>>()
         };
@@ -73,6 +87,7 @@ mod tests {
         assert_eq!(part1(FULL_INPUT), 399);
     }
 
+    #[ignore = "Not implemented"]
     #[test]
     fn test_part2_example() {
         assert_eq!(part2(EXAMPLE_INPUT), 33);
