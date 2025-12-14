@@ -44,7 +44,7 @@ pub fn part2(input: &str) -> u32 {
     machines.iter()
         // .inspect(|machine| println!("{:?}", machine))
         .map(|machine| configure_joltages(machine))
-        .inspect(|presses| eprintln!("{presses} presses"))
+        // .inspect(|presses| eprintln!("{presses} presses"))
         .sum()
 }
 
@@ -77,7 +77,6 @@ mod tests {
         assert_eq!(part1(FULL_INPUT), 399);
     }
 
-    #[ignore = "Not implemented"]
     #[test]
     fn test_part2_example() {
         assert_eq!(part2(EXAMPLE_INPUT), 33);
