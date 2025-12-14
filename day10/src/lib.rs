@@ -7,7 +7,32 @@ pub fn part1(input: &str) -> usize {
 
     machines.iter()
         // .inspect(|machine| println!("{:?}", machine))
-        .map(|machine| machine.configure_indicators())
+        .map(|machine| {
+            // Convert the indicators vector to a bit mask
+            let indicators: u32 = machine.indicators.iter()
+                .rev()
+                .fold(0, |mask, &ch| {
+                    mask * 2 + if ch == '#' { 1 } else { 0 }
+                });
+
+            // Convert each button from a vector to a bit mask
+            let buttons = machine.buttons.iter().map(|button | {
+                button.iter().fold(0, |mask, index| {
+                    mask + (1 << index)
+                })
+            }).collect::<Vec<u32>>();
+
+            // Starting state: all indicators off
+            let start = 0u32;
+            let success = |state: &u32| state == &indicators;
+            let successors = |state: &u32| {
+                buttons.iter()
+                    .map(|button| state ^ button)
+                    .collect::<Vec<_>>()
+            };
+            let path = bfs(&start, successors, success).unwrap();
+            path.len() - 1
+        })
         .sum()
 }
 
@@ -30,35 +55,6 @@ pub struct Machine {
 }
 
 impl Machine {
-    // Return the number of button presses to get the indicator lights
-    // to match the machine definition.
-    fn configure_indicators(&self) -> usize {
-        // Convert the indicators vector to a bit mask
-        let indicators: u32 = self.indicators.iter()
-            .rev()
-            .fold(0, |mask, &ch| {
-                mask * 2 + if ch == '#' { 1 } else { 0 }
-            });
-
-        // Convert each button from a vector to a bit mask
-        let buttons = self.buttons.iter().map(|button | {
-            button.iter().fold(0, |mask, index| {
-                mask + (1 << index)
-            })
-        }).collect::<Vec<u32>>();
-
-        // Starting state: all indicators off
-        let start = 0u32;
-        let success = |state: &u32| state == &indicators;
-        let successors = |state: &u32| {
-            buttons.iter()
-                .map(|button| state ^ button)
-                .collect::<Vec<_>>()
-        };
-        let path = bfs(&start, successors, success).unwrap();
-        path.len() - 1
-    }
-
     // Return the minimum number of button presses to get the joltages
     // to match the machine definition.
     fn configure_joltages(&self) -> u32 {
