@@ -1,5 +1,7 @@
 mod parsing;
+mod part2;
 use parsing::parse_input;
+use part2::configure_joltages;
 use pathfinding::prelude::bfs;
 
 pub fn part1(input: &str) -> usize {
@@ -41,7 +43,7 @@ pub fn part2(input: &str) -> u32 {
 
     machines.iter()
         // .inspect(|machine| println!("{:?}", machine))
-        .map(|machine| machine.configure_joltages())
+        .map(|machine| configure_joltages(machine))
         .inspect(|presses| eprintln!("{presses} presses"))
         .sum()
 }
@@ -52,14 +54,6 @@ pub struct Machine {
     buttons: Vec<Vec<u32>>,
     #[allow(unused)]
     joltages: Vec<u32>,
-}
-
-impl Machine {
-    // Return the minimum number of button presses to get the joltages
-    // to match the machine definition.
-    fn configure_joltages(&self) -> u32 {
-        todo!()
-    }
 }
 
 #[cfg(test)]
