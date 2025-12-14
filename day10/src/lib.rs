@@ -1,6 +1,7 @@
 mod parsing;
 use parsing::parse_input;
 use pathfinding::prelude::bfs;
+use simplex::{Simplex, SimplexConstraint};
 
 pub fn part1(input: &str) -> usize {
     let (_, machines) = parse_input(input).expect("Invalid input");
@@ -11,8 +12,14 @@ pub fn part1(input: &str) -> usize {
         .sum()
 }
 
-pub fn part2(_input: &str) -> u32 {
-    37
+pub fn part2(input: &str) -> u32 {
+    let (_, machines) = parse_input(input).expect("Invalid input");
+
+    machines.iter()
+        // .inspect(|machine| println!("{:?}", machine))
+        .map(|machine| machine.configure_joltages())
+        .inspect(|presses| eprintln!("{presses} presses"))
+        .sum()
 }
 
 #[derive(Debug)]
@@ -37,6 +44,38 @@ impl Machine {
         };
         let path = bfs(&start, successors, success).unwrap();
         path.len() - 1
+    }
+
+    // Return the minimum number of button presses to get the joltages
+    // to match the machine definition.
+    fn configure_joltages(&self) -> u32 {
+        let objective = vec![1.0; self.buttons.len()];
+        dbg!(&objective);
+        let mut constraints: Vec<SimplexConstraint> = Vec::new();
+
+        // Construct the constraints for each joltage.
+        for (index, joltage) in self.joltages.iter().enumerate() {
+            let coefficients: Vec<f64> = self.buttons.iter().map(|button| {
+                if button & (1 << index) != 0 {
+                    1.0
+                } else {
+                    0.0
+                }
+            }).collect();
+            dbg!(&coefficients, joltage);
+            constraints.push(SimplexConstraint::Equal(coefficients, *joltage as f64));
+        }
+        
+        let program = Simplex::minimize(&objective).with(constraints);
+        let mut simplex = program.unwrap();
+        let presses = match simplex.solve() {
+            simplex::SimplexOutput::UniqueOptimum(x) => x,
+            simplex::SimplexOutput::MultipleOptimum(x) => x,
+            simplex::SimplexOutput::InfiniteSolution => todo!(),
+            simplex::SimplexOutput::NoSolution => todo!(),
+        };
+
+        presses as u32
     }
 }
 
