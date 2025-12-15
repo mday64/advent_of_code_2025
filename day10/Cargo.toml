@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 nom.workspace = true
 pathfinding.workspace = true
-simplex = "1"
+rayon = "1"
 
 [dev-dependencies]
 divan.workspace = true
