@@ -16,6 +16,8 @@ pub fn configure_joltages(machine: &Machine) -> u32 {
     let min_presses = machine.joltages.iter().cloned().max().unwrap();
     
     for presses in min_presses.. {
+        eprintln!("Trying {presses} presses");
+        
         // Calculate the minimum and maximum presses for each button
         let max_per_button = machine.buttons.iter().map(|button| {
             button.iter().map(|index| {

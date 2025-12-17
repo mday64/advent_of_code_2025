@@ -1,3 +1,4 @@
+
 use day10::{part1, part2};
 
 fn main() {

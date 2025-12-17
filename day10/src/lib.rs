@@ -42,7 +42,9 @@ pub fn part1(input: &str) -> usize {
 pub fn part2(input: &str) -> u32 {
     let (_, machines) = parse_input(input).expect("Invalid input");
 
-    machines.par_iter().enumerate()
+    let enumerated = machines.into_iter().enumerate().collect::<Vec<_>>();
+
+    enumerated.iter()
         .map(|(index, machine)| (index, configure_joltages(machine)))
         .inspect(|(index, presses)| eprintln!("{index}: {presses} presses"))
         .map(|(_index, presses)| presses)
@@ -84,7 +86,7 @@ mod tests {
     }
 
     // Commit c7c9293 took 1784 seconds (just under 30 minutes).
-    // Commit ??????? took 9.3 seconds
+    // Commit 02aa584 took 9.3 seconds
     #[test]
     fn test_part2_full_line120() {
         let input = "[.###...] (0,2,3,4,6) (0,1,3,4) (0,1,2,4,5,6) (0,2,3,5) (1,5,6) {40,182,28,34,24,186,176}\n";
