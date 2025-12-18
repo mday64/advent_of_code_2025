@@ -28,6 +28,11 @@ pub fn configure_joltages(machine: &Machine) -> u32 {
 // fewer presses than the current best, then increment the best.
 //
 fn dfs(presses: u32, joltages: &[u32], buttons: &[Vec<u32>], best: &mut u32, depth: u32) {
+    // If we can't possibly find a better solution, then skip this branch.
+    if presses + joltages.iter().max().unwrap() >= *best {
+        return;
+    }
+
     // Pick the smallest remaining joltage.  If they are all zero, then
     // we have found a solution; compare it to the best solution so far.
     let min_joltage = joltages
@@ -45,11 +50,6 @@ fn dfs(presses: u32, joltages: &[u32], buttons: &[Vec<u32>], best: &mut u32, dep
         return;
     }
     let (joltage_index, &min_joltage) = min_joltage.unwrap();
-
-    // If we can't possibly find a better solution, then skip this branch.
-    if presses + min_joltage >= *best {
-        return;
-    }
 
     // Find the buttons that affect that joltage, and only affect non-zero
     // joltages.  These are the buttons we can press.
