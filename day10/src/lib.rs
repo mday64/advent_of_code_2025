@@ -3,7 +3,7 @@ mod part2;
 use parsing::parse_input;
 use part2::configure_joltages;
 use pathfinding::prelude::bfs;
-use rayon::prelude::*;
+//use rayon::prelude::*;
 
 pub fn part1(input: &str) -> usize {
     let (_, machines) = parse_input(input).expect("Invalid input");

@@ -42,3 +42,21 @@ $$
 & x_0   & +     & x_1   & +     & x_2   &       &       & = & 10  \\
 &       &       &       &       & x_2   &       &       & = & 5   \\
 $$
+
+## Gaussian Elimination
+I've seen a few Reddit comments that claim that there were at most 3 free variables for any line of input.
+
+## Mixed-Integer Linear Programming
+Look into the good_lp modeler crate.  Probably need to use the scip_bundled feature (the backend solver library).
+
+Look into [Pulp MILP solver](https://coin-or.github.io/pulp/) (Python).
+
+## DFS
+See this [Reddit post](https://www.reddit.com/r/adventofcode/comments/1pity70/comment/ntb36sb/) about using DFS, and a strategy about how to make progress so that you don't have to completely brute force it.  As a bonus, it was written in Rust, and the poster linked to their GitHub!
+
+## Simplex + Branch-and-bound
+Another Rust solution:
+[Reddit post](https://www.reddit.com/r/adventofcode/comments/1pity70/comment/nt9m1wg/)
+
+## Parity
+[[2025 Day 10 (Part 2)] Bifurcate your way to victory!](https://www.reddit.com/r/adventofcode/comments/1pk87hl/2025_day_10_part_2_bifurcate_your_way_to_victory/).
