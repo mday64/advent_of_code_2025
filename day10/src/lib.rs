@@ -3,7 +3,7 @@ mod part2;
 use parsing::parse_input;
 use part2::configure_joltages;
 use pathfinding::prelude::bfs;
-//use rayon::prelude::*;
+use rayon::prelude::*;
 
 pub fn part1(input: &str) -> usize {
     let (_, machines) = parse_input(input).expect("Invalid input");
@@ -43,12 +43,15 @@ pub fn part2(input: &str) -> u32 {
     let (_, machines) = parse_input(input).expect("Invalid input");
 
     let enumerated = machines.into_iter().enumerate().collect::<Vec<_>>();
-
-    enumerated.iter()
+    enumerated.par_iter()
         .map(|(index, machine)| (index, configure_joltages(machine)))
-        .inspect(|(index, presses)| eprintln!("{index}: {presses} presses"))
+        .inspect(|(index, presses)| println!("{index}: {presses} presses"))
         .map(|(_index, presses)| presses)
         .sum()
+
+    // machines.iter()
+    //     .map(configure_joltages)
+    //     .sum()
 }
 
 #[derive(Debug)]
@@ -85,8 +88,15 @@ mod tests {
         assert_eq!(part2(EXAMPLE_INPUT), 33);
     }
 
+    #[test]
+    #[ignore = "Takes too long"]
+    fn test_part2_full() {
+        assert_eq!(part2(FULL_INPUT), 15631);
+    }
+
     // Commit c7c9293 took 1784 seconds (just under 30 minutes).
     // Commit 02aa584 took 9.3 seconds
+    // Commit ??????? (DFS, without rayon) took 65µs
     #[test]
     fn test_part2_full_line120() {
         let input = "[.###...] (0,2,3,4,6) (0,1,3,4) (0,1,2,4,5,6) (0,2,3,5) (1,5,6) {40,182,28,34,24,186,176}\n";

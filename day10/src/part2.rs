@@ -1,280 +1,122 @@
-use std::iter::{FusedIterator, zip};
-
 use crate::Machine;
 
 pub fn configure_joltages(machine: &Machine) -> u32 {
-    let num_buttons = machine.buttons.len();
+    // Sort the buttons from fewest to most joltages affected.
+    // This works with the way we iterate over combinations to initially
+    // generate more presses on buttons that affect many joltages at once.
+    let mut buttons = machine.buttons.clone();
+    buttons.sort_unstable_by_key(|button| button.len());
 
-    // For each joltage, figure out which buttons contribute to it.
-    let mut equations = vec![vec![0u32; num_buttons]; machine.joltages.len()];
-    for (button_num, button) in machine.buttons.iter().enumerate() {
-        for joltage in button {
-            equations[*joltage as usize][button_num] = 1;
+    // Initialize the best answer to an upper bound
+    let mut best: u32 = machine.joltages.iter().sum();
+
+    // Explore various combinations of button presses.
+    // Initial state is no button presses, and joltages at their maximum.
+    dfs(0, &machine.joltages, &buttons, &mut best, 0);
+
+    best
+}
+
+//
+// Explore possible combinations of pressing buttons.  We don't need
+// to explore a single button press at a time.  What we'll do is try
+// to reduce the lowest joltage to zero, exploring all combinations
+// of button presses that affect that minimal joltage.  Since buttons
+// may affect more than one joltage, other joltages may be reduced, too.
+//
+// If we encounter a valid solution (all joltages are zero), and it has
+// fewer presses than the current best, then increment the best.
+//
+fn dfs(presses: u32, joltages: &[u32], buttons: &[Vec<u32>], best: &mut u32, depth: u32) {
+    // Pick the smallest remaining joltage.  If they are all zero, then
+    // we have found a solution; compare it to the best solution so far.
+    let min_joltage = joltages
+        .iter()
+        .enumerate()
+        .filter(|&(_index, &joltage)| joltage > 0)
+        .min_by_key(|&(_index, joltage)| joltage);
+    if min_joltage.is_none() {
+        // There were no non-zero joltages, which means we have a solution.
+        // See if it is better than the best discovered so far.  Either way,
+        // there is nothing more in this branch to explore.
+        if presses < *best {
+            *best = presses;
         }
+        return;
+    }
+    let (joltage_index, &min_joltage) = min_joltage.unwrap();
+
+    // If we can't possibly find a better solution, then skip this branch.
+    if presses + min_joltage >= *best {
+        return;
     }
 
-    let min_presses = machine.joltages.iter().cloned().max().unwrap();
+    // Find the buttons that affect that joltage, and only affect non-zero
+    // joltages.  These are the buttons we can press.
+    let buttons_to_press = buttons.iter()
+        .filter(|button| {
+            button.contains(&(joltage_index as u32)) &&
+            button.iter().all(|&i| joltages[i as usize] > 0)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let num_buttons = buttons_to_press.len();
     
-    for presses in min_presses.. {
-        eprintln!("Trying {presses} presses");
-        
-        // Calculate the minimum and maximum presses for each button
-        let max_per_button = machine.buttons.iter().map(|button| {
-            button.iter().map(|index| {
-                machine.joltages[*index as usize]
-            }).min().unwrap()
-        }).collect::<Vec<u32>>();
-        let total_max_presses = max_per_button.iter().sum::<u32>();
-        let min_per_button = (0..num_buttons).map(|index| {
-            let total_other_max = total_max_presses - max_per_button[index];
-            if total_other_max > presses {
-                0
-            } else {
-                presses - total_other_max
-            }
-        }).collect::<Vec<u32>>();
-
-        // Try the various combinations of presses
-        for partition in Partitions::new(min_per_button, max_per_button, presses) {
-            let joltages: Vec<u32> = equations.iter()
-                .map(|equation| dot_product(equation, &partition))
-                .collect();
-            if joltages == machine.joltages {
-                return presses;
-            }
-        }
+    // If there are no buttons we can press, then we're done with this branch.
+    if num_buttons == 0 {
+        return;
     }
 
-    unreachable!()
-}
-
-fn dot_product(v1: &[u32], v2: &[u32]) -> u32 {
-    zip(v1, v2).fold(0, |sum, (a, b)| sum + a * b)
-}
-
-struct Partitions {
-    current: Vec<u32>,      // Count of presses per button
-    min_presses: Vec<u32>,  // Minimum presses per button
-    max_presses: Vec<u32>,  // Maximum optional presses per button
-    num_buttons: usize,
-    //total_presses: u32,     // The total count of optional presses for all buttons
-    done: bool,             // True if the iterator has been exhausted
-}
-
-impl Partitions {
-    fn new(min_presses: Vec<u32>, max_presses: Vec<u32>, total_presses: u32) -> Partitions {
-        let num_buttons = min_presses.len();
-
-        // Construct current[] to distribute total_presses according to
-        // the min_presses and max_presses vectors, with any excess above
-        // min_presses going to the last entries (as limited by max_presses).
-        let mut current = min_presses.clone();
-        let mut remaining_presses = total_presses - min_presses.iter().sum::<u32>();
-        let mut index = min_presses.len() - 1;
-        while remaining_presses > 0 {
-            if current[index] + remaining_presses > max_presses[index] {
-                current[index] = max_presses[index];
-                remaining_presses -= max_presses[index] - min_presses[index];
-            } else {
-                current[index] += remaining_presses;
-                remaining_presses = 0;
-            }
-            index -= 1;
+    // If there is only one button we can press, then avoid the combinations
+    // logic below.
+    if num_buttons == 1 {
+        let mut new_joltages = Vec::from(joltages);
+        for &j_index in &buttons_to_press[0] {
+            new_joltages[j_index as usize] -= min_joltage;
         }
-        Partitions { current, min_presses, max_presses, num_buttons, /*total_presses,*/ done: false }
+        dfs(presses + min_joltage, &new_joltages, buttons, best, depth+1);
+        return;
+    }
+
+    // Generate all possible ways to distribute min_joltage presses amongst
+    // buttons_to_press.  They are generated in lexicographic order.
+    let mut new_joltages = Vec::with_capacity(joltages.len());
+    let mut combination = vec![0; num_buttons];
+    combination[num_buttons - 1] = min_joltage;
+    loop {
+        // Compute the adjusted joltages based on the combination of presses
+        new_joltages.clear();
+        new_joltages.extend_from_slice(joltages);
+        for (&press, button) in combination.iter().zip(buttons_to_press.iter()) {
+            for &j_index in button.iter() {
+                new_joltages[j_index as usize] -= press;
+            }
+        }
+
+        dfs(presses + min_joltage, &new_joltages, buttons, best, depth+1);
+
+        // Produce the next combination, or break if there are no more.
+        if combination[0] == min_joltage {
+            break;
+        }
+
+        // Find the rightmost non-zero count.  It is at maximum and needs to
+        // wrap around to zero.  Carry one into the count to its left, and
+        // add the rest to the least significant (rightmost) counter.
+        //
+        // NOTE: This works even if the rightmost non-zero count is the last
+        // item in the vector (it will end up decrementing by 1).
+        let right = combination.iter().rposition(|&v| v > 0).unwrap();
+        let remainder = combination[right] - 1;
+        combination[right] = 0;
+        combination[right - 1] += 1;
+        combination[num_buttons - 1] = remainder;
     }
 }
-
-impl Iterator for Partitions {
-    type Item = Vec<u32>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.done {
-            None
-        } else {
-            let result = self.current.clone();
-
-            // Move the iterator to the next state, or set done=true.
-            // Buttons with larger indices should vary fastest.
-            let mut non_minimum = false;
-            let mut non_maximum: Option<usize> = None;
-
-            for index in (0..self.num_buttons).rev() {
-                if non_minimum && self.current[index] < self.max_presses[index] {
-                    non_maximum = Some(index);
-                    break;
-                }
-
-                // NOTE: This check has to come AFTER the one above, or else
-                // non_minimum and non_maximum could be set to the same index,
-                // which would be wrong (and lead to the same partition being
-                // returned forever).
-                if self.current[index] > self.min_presses[index] {
-                    non_minimum = true;
-                }
-            }
-
-            if let Some(max_index) = non_maximum {
-                self.current[max_index] += 1;
-
-                // Subtract one press from buttons to the right of max_index.
-                // Redistribute them as far to the right as possible.
-                let mut presses = self.current[max_index+1..].iter().sum::<u32>() - 1;
-                for index in (max_index+1..self.num_buttons).rev() {
-                    if presses > self.max_presses[index] {
-                        self.current[index] = self.max_presses[index];
-                        presses -= self.max_presses[index];
-                    } else {
-                        self.current[index] = presses;
-                        presses = 0;
-                    }
-                }
-            } else {
-                self.done = true;
-            }
-
-            Some(result)
-        }
-    }
-}
-impl FusedIterator for Partitions {}
 
 #[cfg(test)]
 mod part2_tests {
-    use crate::{Machine, part2::{Partitions, configure_joltages}};
-
-    #[test]
-    fn partitions_3button_3presses() {
-        let mut partitions = Partitions::new(vec![0,0,0], vec![3,3,3], 3);
-        assert_eq!(partitions.next(), Some(vec![0, 0, 3]));
-        assert_eq!(partitions.next(), Some(vec![0, 1, 2]));
-        assert_eq!(partitions.next(), Some(vec![0, 2, 1]));
-        assert_eq!(partitions.next(), Some(vec![0, 3, 0]));
-        assert_eq!(partitions.next(), Some(vec![1, 0, 2]));
-        assert_eq!(partitions.next(), Some(vec![1, 1, 1]));
-        assert_eq!(partitions.next(), Some(vec![1, 2, 0]));
-        assert_eq!(partitions.next(), Some(vec![2, 0, 1]));
-        assert_eq!(partitions.next(), Some(vec![2, 1, 0]));
-        assert_eq!(partitions.next(), Some(vec![3, 0, 0]));
-        assert_eq!(partitions.next(), None);
-        assert_eq!(partitions.next(), None);
-    }
-
-
-    #[test]
-    fn partitions_example2() {
-        // Using per-button minimums and maximums from the example.
-        let mut partitions = Partitions::new(vec![0,1,0,0,0], vec![2,7,2,5,2], 12);
-        assert_eq!(partitions.next(), Some(vec![0,3,2,5,2]));
-        assert_eq!(partitions.next(), Some(vec![0,4,1,5,2]));
-        assert_eq!(partitions.next(), Some(vec![0,4,2,4,2]));
-        assert_eq!(partitions.next(), Some(vec![0,4,2,5,1]));
-        assert_eq!(partitions.next(), Some(vec![0,5,0,5,2]));
-        assert_eq!(partitions.next(), Some(vec![0,5,1,4,2]));
-        assert_eq!(partitions.next(), Some(vec![0,5,1,5,1]));
-        assert_eq!(partitions.next(), Some(vec![0,5,2,3,2]));
-        assert_eq!(partitions.next(), Some(vec![0,5,2,4,1]));
-        assert_eq!(partitions.next(), Some(vec![0,5,2,5,0]));
-        assert_eq!(partitions.next(), Some(vec![0,6,0,4,2]));
-        assert_eq!(partitions.next(), Some(vec![0,6,0,5,1]));
-        assert_eq!(partitions.next(), Some(vec![0,6,1,3,2]));
-        assert_eq!(partitions.next(), Some(vec![0,6,1,4,1]));
-        assert_eq!(partitions.next(), Some(vec![0,6,1,5,0]));
-        assert_eq!(partitions.next(), Some(vec![0,6,2,2,2]));
-        assert_eq!(partitions.next(), Some(vec![0,6,2,3,1]));
-        assert_eq!(partitions.next(), Some(vec![0,6,2,4,0]));
-        assert_eq!(partitions.next(), Some(vec![0,7,0,3,2]));
-        assert_eq!(partitions.next(), Some(vec![0,7,0,4,1]));
-        assert_eq!(partitions.next(), Some(vec![0,7,0,5,0]));
-        assert_eq!(partitions.next(), Some(vec![0,7,1,2,2]));
-        assert_eq!(partitions.next(), Some(vec![0,7,1,3,1]));
-        assert_eq!(partitions.next(), Some(vec![0,7,1,4,0]));
-        assert_eq!(partitions.next(), Some(vec![0,7,2,1,2]));
-        assert_eq!(partitions.next(), Some(vec![0,7,2,2,1]));
-        assert_eq!(partitions.next(), Some(vec![0,7,2,3,0]));
-        assert_eq!(partitions.next(), Some(vec![1,2,2,5,2]));
-        assert_eq!(partitions.next(), Some(vec![1,3,1,5,2]));
-        assert_eq!(partitions.next(), Some(vec![1,3,2,4,2]));
-        assert_eq!(partitions.next(), Some(vec![1,3,2,5,1]));
-        assert_eq!(partitions.next(), Some(vec![1,4,0,5,2]));
-        assert_eq!(partitions.next(), Some(vec![1,4,1,4,2]));
-        assert_eq!(partitions.next(), Some(vec![1,4,1,5,1]));
-        assert_eq!(partitions.next(), Some(vec![1,4,2,3,2]));
-        assert_eq!(partitions.next(), Some(vec![1,4,2,4,1]));
-        assert_eq!(partitions.next(), Some(vec![1,4,2,5,0]));
-        assert_eq!(partitions.next(), Some(vec![1,5,0,4,2]));
-        assert_eq!(partitions.next(), Some(vec![1,5,0,5,1]));
-        assert_eq!(partitions.next(), Some(vec![1,5,1,3,2]));
-        assert_eq!(partitions.next(), Some(vec![1,5,1,4,1]));
-        assert_eq!(partitions.next(), Some(vec![1,5,1,5,0]));
-        assert_eq!(partitions.next(), Some(vec![1,5,2,2,2]));
-        assert_eq!(partitions.next(), Some(vec![1,5,2,3,1]));
-        assert_eq!(partitions.next(), Some(vec![1,5,2,4,0]));
-        assert_eq!(partitions.next(), Some(vec![1,6,0,3,2]));
-        assert_eq!(partitions.next(), Some(vec![1,6,0,4,1]));
-        assert_eq!(partitions.next(), Some(vec![1,6,0,5,0]));
-        assert_eq!(partitions.next(), Some(vec![1,6,1,2,2]));
-        assert_eq!(partitions.next(), Some(vec![1,6,1,3,1]));
-        assert_eq!(partitions.next(), Some(vec![1,6,1,4,0]));
-        assert_eq!(partitions.next(), Some(vec![1,6,2,1,2]));
-        assert_eq!(partitions.next(), Some(vec![1,6,2,2,1]));
-        assert_eq!(partitions.next(), Some(vec![1,6,2,3,0]));
-        assert_eq!(partitions.next(), Some(vec![1,7,0,2,2]));
-        assert_eq!(partitions.next(), Some(vec![1,7,0,3,1]));
-        assert_eq!(partitions.next(), Some(vec![1,7,0,4,0]));
-        assert_eq!(partitions.next(), Some(vec![1,7,1,1,2]));
-        assert_eq!(partitions.next(), Some(vec![1,7,1,2,1]));
-        assert_eq!(partitions.next(), Some(vec![1,7,1,3,0]));
-        assert_eq!(partitions.next(), Some(vec![1,7,2,0,2]));
-        assert_eq!(partitions.next(), Some(vec![1,7,2,1,1]));
-        assert_eq!(partitions.next(), Some(vec![1,7,2,2,0]));
-        assert_eq!(partitions.next(), Some(vec![2,1,2,5,2]));
-        assert_eq!(partitions.next(), Some(vec![2,2,1,5,2]));
-        assert_eq!(partitions.next(), Some(vec![2,2,2,4,2]));
-        assert_eq!(partitions.next(), Some(vec![2,2,2,5,1]));
-        assert_eq!(partitions.next(), Some(vec![2,3,0,5,2]));
-        assert_eq!(partitions.next(), Some(vec![2,3,1,4,2]));
-        assert_eq!(partitions.next(), Some(vec![2,3,1,5,1]));
-        assert_eq!(partitions.next(), Some(vec![2,3,2,3,2]));
-        assert_eq!(partitions.next(), Some(vec![2,3,2,4,1]));
-        assert_eq!(partitions.next(), Some(vec![2,3,2,5,0]));
-        assert_eq!(partitions.next(), Some(vec![2,4,0,4,2]));
-        assert_eq!(partitions.next(), Some(vec![2,4,0,5,1]));
-        assert_eq!(partitions.next(), Some(vec![2,4,1,3,2]));
-        assert_eq!(partitions.next(), Some(vec![2,4,1,4,1]));
-        assert_eq!(partitions.next(), Some(vec![2,4,1,5,0]));
-        assert_eq!(partitions.next(), Some(vec![2,4,2,2,2]));
-        assert_eq!(partitions.next(), Some(vec![2,4,2,3,1]));
-        assert_eq!(partitions.next(), Some(vec![2,4,2,4,0]));
-        assert_eq!(partitions.next(), Some(vec![2,5,0,3,2]));
-        assert_eq!(partitions.next(), Some(vec![2,5,0,4,1]));
-        assert_eq!(partitions.next(), Some(vec![2,5,0,5,0]));
-        assert_eq!(partitions.next(), Some(vec![2,5,1,2,2]));
-        assert_eq!(partitions.next(), Some(vec![2,5,1,3,1]));
-        assert_eq!(partitions.next(), Some(vec![2,5,1,4,0]));
-        assert_eq!(partitions.next(), Some(vec![2,5,2,1,2]));
-        assert_eq!(partitions.next(), Some(vec![2,5,2,2,1]));
-        assert_eq!(partitions.next(), Some(vec![2,5,2,3,0]));
-        assert_eq!(partitions.next(), Some(vec![2,6,0,2,2]));
-        assert_eq!(partitions.next(), Some(vec![2,6,0,3,1]));
-        assert_eq!(partitions.next(), Some(vec![2,6,0,4,0]));
-        assert_eq!(partitions.next(), Some(vec![2,6,1,1,2]));
-        assert_eq!(partitions.next(), Some(vec![2,6,1,2,1]));
-        assert_eq!(partitions.next(), Some(vec![2,6,1,3,0]));
-        assert_eq!(partitions.next(), Some(vec![2,6,2,0,2]));
-        assert_eq!(partitions.next(), Some(vec![2,6,2,1,1]));
-        assert_eq!(partitions.next(), Some(vec![2,6,2,2,0]));
-        assert_eq!(partitions.next(), Some(vec![2,7,0,1,2]));
-        assert_eq!(partitions.next(), Some(vec![2,7,0,2,1]));
-        assert_eq!(partitions.next(), Some(vec![2,7,0,3,0]));
-        assert_eq!(partitions.next(), Some(vec![2,7,1,0,2]));
-        assert_eq!(partitions.next(), Some(vec![2,7,1,1,1]));
-        assert_eq!(partitions.next(), Some(vec![2,7,1,2,0]));
-        assert_eq!(partitions.next(), Some(vec![2,7,2,0,1]));
-        assert_eq!(partitions.next(), Some(vec![2,7,2,1,0]));
-        assert_eq!(partitions.next(), None);
-        assert_eq!(partitions.next(), None);
-    }
+    use crate::{Machine, part2::configure_joltages};
 
     #[test]
     fn part2_example_0() {
