@@ -1,4 +1,4 @@
-mod parsing;
+pub mod parsing;
 mod part2;
 use parsing::parse_input;
 use part2::configure_joltages;
@@ -56,10 +56,10 @@ pub fn part2(input: &str) -> u32 {
 
 #[derive(Debug)]
 pub struct Machine {
-    indicators: Vec<char>,
-    buttons: Vec<Vec<u32>>,
+    pub indicators: Vec<char>,
+    pub buttons: Vec<Vec<u32>>,
     #[allow(unused)]
-    joltages: Vec<u32>,
+    pub joltages: Vec<u32>,
 }
 
 #[cfg(test)]
