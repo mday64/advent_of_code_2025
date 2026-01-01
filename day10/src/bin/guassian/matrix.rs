@@ -1,15 +1,16 @@
-use std::ops::{Index, IndexMut};
+use std::{fmt::Display, ops::{Index, IndexMut}};
+use num::Integer;
 
 #[derive(Debug)]
-pub struct Matrix {
-    pub rows: Vec<Vec<i32>>
+pub struct Matrix<T> {
+    pub rows: Vec<Vec<T>>
 }
 
-impl Matrix {
-    pub fn new(num_rows: usize, num_columns: usize) -> Matrix {
+impl<T: Integer+Clone+Copy+Display> Matrix<T> {
+    pub fn new(num_rows: usize, num_columns: usize) -> Matrix<T> {
         let mut rows = Vec::with_capacity(num_rows);
         for _ in 0..num_rows {
-            rows.push(vec![0; num_columns]);
+            rows.push(vec![T::zero(); num_columns]);
         }
         Matrix{rows}
     }
@@ -29,24 +30,29 @@ impl Matrix {
     }
 
     pub fn subtract_rows(&mut self, src_row: usize, dest_row: usize, col: usize) {
+        use num::integer::lcm;
         let src_elem = self.rows[src_row][col];
         let dest_elem = self.rows[dest_row][col];
-        println!("R{dest_row} = {src_elem} * R{dest_row} - {dest_elem} * R{src_row}");
+        let common = lcm(src_elem, dest_elem);
+        let src_mul = common / src_elem;
+        let dest_mul = common / dest_elem;
+
+        println!("R{dest_row} = {dest_mul} * R{dest_row} - {src_mul} * R{src_row}");
         for col in 0..self.rows[0].len() {
-            self.rows[dest_row][col] = self.rows[dest_row][col] * src_elem - self.rows[src_row][col] * dest_elem;
+            self.rows[dest_row][col] = self.rows[dest_row][col] * dest_mul - self.rows[src_row][col] * src_mul;
         }
     }
 }
 
-impl Index<usize> for Matrix {
-    type Output = Vec<i32>;
+impl<T> Index<usize> for Matrix<T> {
+    type Output = Vec<T>;
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.rows[index]
     }
 }
 
-impl IndexMut<usize> for Matrix {
+impl<T> IndexMut<usize> for Matrix<T> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.rows[index]
     }

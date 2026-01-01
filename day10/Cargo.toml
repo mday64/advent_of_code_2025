@@ -8,6 +8,7 @@ ndarray.workspace = true
 nom.workspace = true
 pathfinding.workspace = true
 rayon = "1"
+num = "0.4.3"
 
 [dev-dependencies]
 divan.workspace = true

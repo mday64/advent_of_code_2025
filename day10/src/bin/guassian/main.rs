@@ -10,7 +10,9 @@ fn main() {
 
 fn part2(input: &str) -> i32 {
     let (_, machines) = parse_input(input).expect("Invalid input");
-    machines.into_iter().map(|machine| {
+    machines.into_iter().enumerate().map(|(machine_num, machine)| {
+        println!("Machine #{machine_num}");
+        let mut free_columns = Vec::<usize>::new();
         let num_rows = machine.joltages.len();
         let num_buttons = machine.buttons.len();
 
@@ -32,6 +34,7 @@ fn part2(input: &str) -> i32 {
         equations.print();
         let mut arranged_rows = 0;
         for col in 0..num_buttons {
+            let mut found_pivot = false;
             println!("Checking column {col}");
 
             // Find a row below `arranged_rows` with a non-zero entry in column `col`.
@@ -57,8 +60,12 @@ fn part2(input: &str) -> i32 {
                     }
 
                     // We are done with the current column.
+                    found_pivot = true;
                     break;
                 }
+            }
+            if !found_pivot {
+                free_columns.push(col);
             }
         }
 
@@ -71,6 +78,7 @@ fn part2(input: &str) -> i32 {
             for col in 0..num_buttons {
                 if equations[row][col] != 0 {
                     println!("Found pivot in column {col}");
+                    // TODO: Should we try to divide out any common factor for this row?
                     // Eliminate non-zero values above this entry
                     for r in 0..row {
                         if equations[r][col] != 0 {
@@ -96,7 +104,22 @@ static EXAMPLE_INPUT: &str = "\
 [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
 ";
 
+#[cfg(test)]
+static FULL_INPUT: &str = include_str!("../../../input.txt");
+
 #[test]
 fn test_example() {
     assert_eq!(part2(EXAMPLE_INPUT), 33);
+}
+
+#[test]
+fn test_line22() {
+    // See if this causes numeric overflow
+    let input = "[#..#..#.##] (4,5,6,8,9) (0) (0,1,6,7,9) (1,2,3,4,5,8,9) (0,1,2,6,7,8,9) (0,1,7) (3,5,6,7,8) (2,4,5,6) (1,2,3,4,6,9) (0,3,6,7,8,9) (0,2,4,5,6,7,8,9) (1,3,4,5,6,8,9) {36,35,15,28,33,36,56,41,50,50}\n";
+    assert_eq!(part2(input), 1);    // This is not the correct answer
+}
+
+#[test]
+fn test_part2_full() {
+    assert_eq!(part2(FULL_INPUT), 15631);
 }
