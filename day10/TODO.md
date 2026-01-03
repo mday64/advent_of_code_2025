@@ -46,6 +46,8 @@ $$
 ## Gaussian Elimination
 I've seen a few Reddit comments that claim that there were at most 3 free variables for any line of input.
 
+Here's a [Reddit thread](https://www.reddit.com/r/adventofcode/comments/1psvl0l/2025_day_10_part_2_getting_a_wrong_solution/) that looks helpful.
+
 ## Mixed-Integer Linear Programming
 Look into the good_lp modeler crate.  Probably need to use the scip_bundled feature (the backend solver library).
 

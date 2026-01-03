@@ -99,6 +99,7 @@ fn part2(input: &str) -> i32 {
         }
 
         // Remove rows of all zeroes
+        // println!("Removing zero rows");
         equations.rows.retain(|row| row.iter().any(|&v| v != 0));
         // equations.print();
 
@@ -107,7 +108,7 @@ fn part2(input: &str) -> i32 {
         // Use itertools > multi_cartesian_product.
         // Take advantage of the maximum number of presses for any given button.
         let min_presses = free_columns.iter()
-            .map(|&col| 0i32..max_presses[col])
+            .map(|&col| 0i32..(max_presses[col]+1))
             .multi_cartesian_product()
             .filter_map(|free_presses| {
                 // Use the selected combination for the free variables
@@ -142,7 +143,7 @@ fn part2(input: &str) -> i32 {
             })
             .min()
             .expect("No valid combination found");
-        println!("Line {}: {min_presses} presses", _machine_num+1);
+        // println!("Line {}: {min_presses} presses", _machine_num+1);
         min_presses
     }).sum()
 }
