@@ -148,40 +148,43 @@ fn part2(input: &str) -> i32 {
 }
 
 #[cfg(test)]
-static EXAMPLE_INPUT: &str = "\
+mod test {
+    use super::part2;
+
+    static EXAMPLE_INPUT: &str = "\
 [.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
 [...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}
 [.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}
 ";
 
-#[cfg(test)]
-static FULL_INPUT: &str = include_str!("../../../input.txt");
+    static FULL_INPUT: &str = include_str!("../../../input.txt");
 
-#[test]
-fn test_example() {
-    assert_eq!(part2(EXAMPLE_INPUT), 33);
-}
+    #[test]
+    fn test_example() {
+        assert_eq!(part2(EXAMPLE_INPUT), 33);
+    }
 
-#[test]
-fn test_line3() {
-    let input = "[.###] (0,1) (0,3) (3) (0,2) (1,3) {14,19,7,36}\n";
-    assert_eq!(part2(input), 43);
-}
+    #[test]
+    fn test_line3() {
+        let input = "[.###] (0,1) (0,3) (3) (0,2) (1,3) {14,19,7,36}\n";
+        assert_eq!(part2(input), 43);
+    }
 
-#[test]
-fn test_line22() {
-    // See if this causes numeric overflow
-    let input = "[#..#..#.##] (4,5,6,8,9) (0) (0,1,6,7,9) (1,2,3,4,5,8,9) (0,1,2,6,7,8,9) (0,1,7) (3,5,6,7,8) (2,4,5,6) (1,2,3,4,6,9) (0,3,6,7,8,9) (0,2,4,5,6,7,8,9) (1,3,4,5,6,8,9) {36,35,15,28,33,36,56,41,50,50}\n";
-    assert_eq!(part2(input), 68);
-}
+    #[test]
+    fn test_line22() {
+        // See if this causes numeric overflow
+        let input = "[#..#..#.##] (4,5,6,8,9) (0) (0,1,6,7,9) (1,2,3,4,5,8,9) (0,1,2,6,7,8,9) (0,1,7) (3,5,6,7,8) (2,4,5,6) (1,2,3,4,6,9) (0,3,6,7,8,9) (0,2,4,5,6,7,8,9) (1,3,4,5,6,8,9) {36,35,15,28,33,36,56,41,50,50}\n";
+        assert_eq!(part2(input), 68);
+    }
 
-#[test]
-fn test_line26() {
-    let input = "[###.] (0) (1,2) (1,3) (0,1,3) (0,2) (0,1) {52,43,35,10}\n";
-    assert_eq!(part2(input), 65);
-}
+    #[test]
+    fn test_line26() {
+        let input = "[###.] (0) (1,2) (1,3) (0,1,3) (0,2) (0,1) {52,43,35,10}\n";
+        assert_eq!(part2(input), 65);
+    }
 
-#[test]
-fn test_part2_full() {
-    assert_eq!(part2(FULL_INPUT), 15631);
+    #[test]
+    fn test_part2_full() {
+        assert_eq!(part2(FULL_INPUT), 15631);
+    }
 }
