@@ -106,7 +106,7 @@ fn part2(input: &str) -> i32 {
         // remaining variables, and pick the most optimum solution.
         // Use itertools > multi_cartesian_product.
         // Take advantage of the maximum number of presses for any given button.
-        free_columns.iter()
+        let min_presses = free_columns.iter()
             .map(|&col| 0i32..max_presses[col])
             .multi_cartesian_product()
             .filter_map(|free_presses| {
@@ -141,7 +141,9 @@ fn part2(input: &str) -> i32 {
                 Some(vars.into_iter().sum::<i32>())
             })
             .min()
-            .expect("No valid combination found")
+            .expect("No valid combination found");
+        println!("Line {}: {min_presses} presses", _machine_num+1);
+        min_presses
     }).sum()
 }
 
@@ -161,10 +163,22 @@ fn test_example() {
 }
 
 #[test]
+fn test_line3() {
+    let input = "[.###] (0,1) (0,3) (3) (0,2) (1,3) {14,19,7,36}\n";
+    assert_eq!(part2(input), 43);
+}
+
+#[test]
 fn test_line22() {
     // See if this causes numeric overflow
     let input = "[#..#..#.##] (4,5,6,8,9) (0) (0,1,6,7,9) (1,2,3,4,5,8,9) (0,1,2,6,7,8,9) (0,1,7) (3,5,6,7,8) (2,4,5,6) (1,2,3,4,6,9) (0,3,6,7,8,9) (0,2,4,5,6,7,8,9) (1,3,4,5,6,8,9) {36,35,15,28,33,36,56,41,50,50}\n";
-    assert_eq!(part2(input), 1);    // This is not the correct answer
+    assert_eq!(part2(input), 68);
+}
+
+#[test]
+fn test_line26() {
+    let input = "[###.] (0) (1,2) (1,3) (0,1,3) (0,2) (0,1) {52,43,35,10}\n";
+    assert_eq!(part2(input), 65);
 }
 
 #[test]
