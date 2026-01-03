@@ -1,6 +1,7 @@
 use day10::parsing::parse_input;
 mod matrix;
 use matrix::Matrix;
+use itertools::Itertools;
 
 fn main() {
     let input = include_str!("../../../input.txt");
@@ -10,11 +11,16 @@ fn main() {
 
 fn part2(input: &str) -> i32 {
     let (_, machines) = parse_input(input).expect("Invalid input");
-    machines.into_iter().enumerate().map(|(machine_num, machine)| {
-        println!("Machine #{machine_num}");
+    machines.into_iter().enumerate().map(|(_machine_num, machine)| {
+        // println!("Machine #{_machine_num}");
         let mut free_columns = Vec::<usize>::new();
         let num_rows = machine.joltages.len();
         let num_buttons = machine.buttons.len();
+
+        // Figure out the maximum number of presses for each button
+        let max_presses: Vec<i32> = machine.buttons.iter().map(|button| {
+            button.iter().map(|&j| machine.joltages[j as usize]).min().unwrap() as i32
+        }).collect();
 
         // Create a system of linear equations based on which buttons
         // map to which joltage.
@@ -27,25 +33,26 @@ fn part2(input: &str) -> i32 {
         for (j, joltage) in machine.joltages.iter().enumerate() {
             equations[j][num_buttons] = *joltage as i32;
         }
+        // equations.print();
 
         // Do Gaussian elimination (or similar) to come up with a
         // solution (or family of solutions).  Start with row
         // echelon form.
-        equations.print();
+        // equations.print();
         let mut arranged_rows = 0;
         for col in 0..num_buttons {
             let mut found_pivot = false;
-            println!("Checking column {col}");
+            // println!("Checking column {col}");
 
             // Find a row below `arranged_rows` with a non-zero entry in column `col`.
             for row in arranged_rows..num_rows {
                 if equations[row][col] != 0 {
-                    println!("Found non-zero in row {row}");
+                    // println!("Found non-zero in row {row}");
                     if row > arranged_rows {
                         // Move row `row` to arranged_rows + 1
-                        println!("Swapping rows {row} and {}", arranged_rows);
+                        // println!("Swapping rows {row} and {}", arranged_rows);
                         equations.swap(row, arranged_rows);
-                        equations.print();
+                        // equations.print();
                     }
                     arranged_rows += 1;
                     
@@ -55,7 +62,7 @@ fn part2(input: &str) -> i32 {
                     for row in arranged_rows..num_rows {
                         if equations[row][col] != 0 {
                             equations.subtract_rows(arranged_rows - 1, row, col);
-                            equations.print();
+                            // equations.print();
                         }
                     }
 
@@ -71,19 +78,19 @@ fn part2(input: &str) -> i32 {
 
         // Try to get close to reduced row echelon form.  For each column
         // that is uniquely determined, substitute into rows above.
-        println!("Starting Reduced Row Echelon Form");
+        // println!("Starting Reduced Row Echelon Form");
         for row in (0..num_rows).rev() {
-            println!("Checking row {row}");
+            // println!("Checking row {row}");
             // Find the first non-zero column in this row
             for col in 0..num_buttons {
                 if equations[row][col] != 0 {
-                    println!("Found pivot in column {col}");
+                    // println!("Found pivot in column {col}");
                     // TODO: Should we try to divide out any common factor for this row?
                     // Eliminate non-zero values above this entry
                     for r in 0..row {
                         if equations[r][col] != 0 {
                             equations.subtract_rows(row, r, col);
-                            equations.print();
+                            // equations.print();
                         }
                     }
                     break;
@@ -91,9 +98,50 @@ fn part2(input: &str) -> i32 {
             }
         }
 
-        println!("----");
+        // Remove rows of all zeroes
+        equations.rows.retain(|row| row.iter().any(|&v| v != 0));
+        // equations.print();
 
-        1
+        // Try combinations of values for the free variables, solve for the
+        // remaining variables, and pick the most optimum solution.
+        // Use itertools > multi_cartesian_product.
+        // Take advantage of the maximum number of presses for any given button.
+        free_columns.iter()
+            .map(|&col| 0i32..max_presses[col])
+            .multi_cartesian_product()
+            .filter_map(|free_presses| {
+                // Use the selected combination for the free variables
+                let mut vars = vec![0i32; num_buttons];
+                for (&col, &presses) in free_columns.iter().zip(free_presses.iter()) {
+                    vars[col] = presses;
+                }
+
+                // Back substitute the non-free variables.  If a variable would
+                // be negative or not an integer, then reject this solution.
+                for row in equations.rows.iter().rev() {
+                    // Find the first non-zero column; that's the variable we
+                    // are solving for in this iteration.
+                    let leading = row.iter().position(|&v| v != 0).unwrap();
+                    let coefficient = row[leading];
+
+                    // Compute the (scaled) value of this variable
+                    let mut scaled = *row.last().unwrap();
+                    for other_var in (leading+1)..(row.len()-1) {
+                        scaled -= row[other_var] * vars[other_var];
+                    }
+
+                    // If the variable would not be an integer, or would be
+                    // negative, reject this solution.
+                    if scaled % coefficient != 0 || scaled / coefficient < 0 {
+                        return None;
+                    }
+
+                    vars[leading] = scaled / coefficient;
+                }
+                Some(vars.into_iter().sum::<i32>())
+            })
+            .min()
+            .expect("No valid combination found")
     }).sum()
 }
 

@@ -3,7 +3,7 @@ mod part2;
 use parsing::parse_input;
 use part2::configure_joltages;
 use pathfinding::prelude::bfs;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 
 pub fn part1(input: &str) -> usize {
     let (_, machines) = parse_input(input).expect("Invalid input");
@@ -42,16 +42,16 @@ pub fn part1(input: &str) -> usize {
 pub fn part2(input: &str) -> u32 {
     let (_, machines) = parse_input(input).expect("Invalid input");
 
-    let enumerated = machines.into_iter().enumerate().collect::<Vec<_>>();
-    enumerated.par_iter()
-        .map(|(index, machine)| (index, configure_joltages(machine)))
-        .inspect(|(index, presses)| println!("{index}: {presses} presses"))
-        .map(|(_index, presses)| presses)
-        .sum()
-
-    // machines.iter()
-    //     .map(configure_joltages)
+    // let enumerated = machines.into_iter().enumerate().collect::<Vec<_>>();
+    // enumerated.par_iter()
+    //     .map(|(index, machine)| (index, configure_joltages(machine)))
+    //     .inspect(|(index, presses)| println!("{index}: {presses} presses"))
+    //     .map(|(_index, presses)| presses)
     //     .sum()
+
+    machines.iter()
+        .map(configure_joltages)
+        .sum()
 }
 
 #[derive(Debug)]

@@ -1,4 +1,4 @@
-use std::{fmt::Display, ops::{Index, IndexMut}};
+use std::{fmt::Display, ops::{Index, IndexMut, Range}};
 use num::Integer;
 
 #[derive(Debug)]
@@ -15,6 +15,7 @@ impl<T: Integer+Clone+Copy+Display> Matrix<T> {
         Matrix{rows}
     }
 
+    #[allow(dead_code)]
     pub fn print(&self) {
         for row in &self.rows {
             for col in row {
@@ -37,9 +38,16 @@ impl<T: Integer+Clone+Copy+Display> Matrix<T> {
         let src_mul = common / src_elem;
         let dest_mul = common / dest_elem;
 
-        println!("R{dest_row} = {dest_mul} * R{dest_row} - {src_mul} * R{src_row}");
+        // println!("R{dest_row} = {dest_mul} * R{dest_row} - {src_mul} * R{src_row}");
         for col in 0..self.rows[0].len() {
             self.rows[dest_row][col] = self.rows[dest_row][col] * dest_mul - self.rows[src_row][col] * src_mul;
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn rotate_column_left(&mut self, range: Range<usize>) {
+        for row in self.rows.iter_mut() {
+            row[range.clone()].rotate_left(1);
         }
     }
 }
