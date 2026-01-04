@@ -13,7 +13,6 @@ fn part2(input: &str) -> i32 {
     let (_, machines) = parse_input(input).expect("Invalid input");
     machines.into_iter().enumerate().map(|(_machine_num, machine)| {
         // println!("Machine #{_machine_num}");
-        let mut free_columns = Vec::<usize>::new();
         let num_rows = machine.joltages.len();
         let num_buttons = machine.buttons.len();
 
@@ -33,75 +32,10 @@ fn part2(input: &str) -> i32 {
         for (j, joltage) in machine.joltages.iter().enumerate() {
             equations[j][num_buttons] = *joltage as i32;
         }
-        // equations.print();
 
-        // Do Gaussian elimination (or similar) to come up with a
-        // solution (or family of solutions).  Start with row
-        // echelon form.
-        // equations.print();
-        let mut arranged_rows = 0;
-        for col in 0..num_buttons {
-            let mut found_pivot = false;
-            // println!("Checking column {col}");
-
-            // Find a row below `arranged_rows` with a non-zero entry in column `col`.
-            for row in arranged_rows..num_rows {
-                if equations[row][col] != 0 {
-                    // println!("Found non-zero in row {row}");
-                    if row > arranged_rows {
-                        // Move row `row` to arranged_rows + 1
-                        // println!("Swapping rows {row} and {}", arranged_rows);
-                        equations.swap(row, arranged_rows);
-                        // equations.print();
-                    }
-                    arranged_rows += 1;
-                    
-                    // If any rows below `arranged_rows`` have a non-zero entry in row `col`,
-                    // use row subtraction to change that column to zero.
-                    // let pivot = equations[row][col];
-                    for row in arranged_rows..num_rows {
-                        if equations[row][col] != 0 {
-                            equations.subtract_rows(arranged_rows - 1, row, col);
-                            // equations.print();
-                        }
-                    }
-
-                    // We are done with the current column.
-                    found_pivot = true;
-                    break;
-                }
-            }
-            if !found_pivot {
-                free_columns.push(col);
-            }
-        }
-
-        // Try to get close to reduced row echelon form.  For each column
-        // that is uniquely determined, substitute into rows above.
-        // println!("Starting Reduced Row Echelon Form");
-        for row in (0..num_rows).rev() {
-            // println!("Checking row {row}");
-            // Find the first non-zero column in this row
-            for col in 0..num_buttons {
-                if equations[row][col] != 0 {
-                    // println!("Found pivot in column {col}");
-                    // TODO: Should we try to divide out any common factor for this row?
-                    // Eliminate non-zero values above this entry
-                    for r in 0..row {
-                        if equations[r][col] != 0 {
-                            equations.subtract_rows(row, r, col);
-                            // equations.print();
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        // Remove rows of all zeroes
-        // println!("Removing zero rows");
-        equations.rows.retain(|row| row.iter().any(|&v| v != 0));
-        // equations.print();
+        // Do Gaussian elimination to convert the matrix to (roughly)
+        // reduced row echelon form.
+        let free_columns = equations.reduce();
 
         // Try combinations of values for the free variables, solve for the
         // remaining variables, and pick the most optimum solution.
