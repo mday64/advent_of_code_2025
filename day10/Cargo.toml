@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ndarray.workspace = true
 nom.workspace = true
 pathfinding.workspace = true
 itertools.workspace = true
