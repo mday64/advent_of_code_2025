@@ -1,4 +1,5 @@
 pub mod parsing;
+pub mod matrix;
 mod part2;
 use parsing::parse_input;
 use part2::configure_joltages;

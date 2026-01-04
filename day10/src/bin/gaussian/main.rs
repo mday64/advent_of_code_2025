@@ -1,6 +1,5 @@
 use day10::parsing::parse_input;
-mod matrix;
-use matrix::Matrix;
+use day10::matrix::Matrix;
 use itertools::Itertools;
 
 fn main() {
