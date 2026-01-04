@@ -1,4 +1,4 @@
-use day10::{ part1, part2 };
+use day10::{ part1, part2, part2_gaussian::part2_gauss };
 
 fn main() {
     divan::main();
@@ -11,9 +11,15 @@ fn bench_part1() {
     part1(INPUT);
 }
 
+#[ignore = "too slow"]
 #[divan::bench]
 fn bench_part2() {
     part2(INPUT);
+}
+
+#[divan::bench]
+fn bench_part2_gauss() {
+    part2_gauss(INPUT);
 }
 
 #[divan::bench]

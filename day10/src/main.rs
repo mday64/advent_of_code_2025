@@ -1,5 +1,5 @@
 
-use day10::{part1, part2};
+use day10::{part1, part2_gaussian::part2_gauss as part2};
 
 fn main() {
     let input = include_str!("../input.txt");

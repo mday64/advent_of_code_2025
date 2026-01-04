@@ -1,6 +1,7 @@
 pub mod parsing;
 pub mod matrix;
 mod part2;
+pub mod part2_gaussian;
 use parsing::parse_input;
 use part2::configure_joltages;
 use pathfinding::prelude::bfs;
